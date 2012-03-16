@@ -95,9 +95,9 @@
 
 - (BOOL)checkIfGoAgentInstalled {
     NSString *goagentPath = [self pathInApplicationSupportFolder:@"goagent"];
-    NSString *proxypyPath  = [[goagentPath stringByAppendingPathComponent:@"local"] stringByAppendingPathComponent:@"proxy.py"];
-    NSString *fetchpyPath = [[[goagentPath stringByAppendingPathComponent:@"server"] stringByAppendingPathComponent:@"python"] stringByAppendingPathComponent:@"fetch.py"];
-    return [[NSFileManager defaultManager] fileExistsAtPath:proxypyPath] && [[NSFileManager defaultManager] fileExistsAtPath:fetchpyPath];
+    NSString *proxypyPath  = [[goagentPath stringByAppendingPathComponent:@"local"] stringByAppendingPathComponent:@"westchamberproxy.py"];
+    
+    return [[NSFileManager defaultManager] fileExistsAtPath:proxypyPath];
 }
 
 
@@ -106,11 +106,9 @@
     [[NSFileManager defaultManager] removeItemAtPath:goagentPath error:NULL];
     [[NSFileManager defaultManager] createDirectoryAtPath:goagentPath withIntermediateDirectories:YES attributes:nil error:NULL];
     
-    [[NSFileManager defaultManager] copyItemAtPath:[path stringByAppendingPathComponent:@"local"]
+    [[NSFileManager defaultManager] copyItemAtPath:path
                                             toPath:[goagentPath stringByAppendingPathComponent:@"local"] error:NULL];
     
-    [[NSFileManager defaultManager] copyItemAtPath:[path stringByAppendingPathComponent:@"server"]
-                                            toPath:[goagentPath stringByAppendingPathComponent:@"server"] error:NULL];
 }
 
 
@@ -223,13 +221,13 @@
             proxyini = [proxyini stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"{%@}", key]
                                                            withString:value];
         }
-        [proxyini writeToFile:[copyPath stringByAppendingPathComponent:@"proxy.ini"] atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+        [proxyini writeToFile:[copyPath stringByAppendingPathComponent:@"config.py"] atomically:YES encoding:NSUTF8StringEncoding error:NULL];
         
         [statusLogTextView clear];
         [statusLogTextView appendString:@"正在启动...\n"];
         
         // 启动代理
-        NSArray *arguments = [NSArray arrayWithObjects:@"python", @"proxy.py", nil];
+        NSArray *arguments = [NSArray arrayWithObjects:@"python", @"westchamberproxy.py", nil];
         [runner runCommand:@"/usr/bin/env"
           currentDirectory:copyPath
                  arguments:arguments
