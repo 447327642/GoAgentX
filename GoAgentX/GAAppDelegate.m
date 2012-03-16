@@ -121,11 +121,11 @@
                       "目录中将会有 local 和 server 两个目录，在下一步的选择框中请选择包含 local 和 server 的目录"];
     
     if ([alert runModal] == NSAlertDefaultReturn) {
-        [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://code.google.com/p/goagent/"]];
+        [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/liruqi/west-chamber-season-3/zipball/master"]];
     }
     
     NSOpenPanel *op = [NSOpenPanel openPanel];
-    op.title = @"请选择包含 goagent 所在的目录，这个目录包含 local 和 server 两个目录";
+    op.title = @"请选择 west-chamber-proxy 所在的目录，这个目录包含westchamberproxy.py 文件";
     op.prompt = @"选择";
     op.canChooseFiles = NO;
     op.canChooseDirectories = YES;
@@ -133,22 +133,22 @@
         [self installFromFolder:[[op URL] path]];
         
         if ([self checkIfGoAgentInstalled]) {
-            [[NSAlert alertWithMessageText:@"安装 goagent 成功"
+            [[NSAlert alertWithMessageText:@"安装 west-chamber proxy 成功"
                              defaultButton:@"确定"
                            alternateButton:nil
                                otherButton:nil
                  informativeTextWithFormat:@"如果您还未部署过 App Engine 服务端，请先进入服务端部署标签页进行部署，再到客户端设置页进行设置，最后到状态标签页启动连接。"] runModal];
             
         } else {
-            [[NSAlert alertWithMessageText:@"安装 goagent 失败"
+            [[NSAlert alertWithMessageText:@"安装 west-chamber proxy 失败"
                              defaultButton:@"确定"
                            alternateButton:nil
                                otherButton:nil
-                 informativeTextWithFormat:@"您选择的目录没有包含 local 或 server 目录，或者不是正确的 goagent 解压目录，请在客户端配置标签中尝试重新安装。"] runModal];
+                 informativeTextWithFormat:@"您选择的目录没有包含 local 或 server 目录，或者不是正确的 west-chamber proxy 解压目录，请在客户端配置标签中尝试重新安装。"] runModal];
         }
         
     } else {
-        [[NSAlert alertWithMessageText:@"尚未安装 goagent"
+        [[NSAlert alertWithMessageText:@"尚未安装 west-chamber proxy"
                          defaultButton:@"确定"
                        alternateButton:nil
                            otherButton:nil
