@@ -2340,11 +2340,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 						<string key="clientServerSegment">NSSegmentedControl</string>
 						<string key="clientServicePasswordField">NSTextField</string>
 						<string key="clientUseProxyButton">NSButton</string>
-						<string key="deployAppIdField">NSTextField</string>
-						<string key="deployLogTextView">GAAutoscrollTextView</string>
-						<string key="deployPasswordField">NSSecureTextField</string>
-						<string key="deployServicePasswordField">NSTextField</string>
-						<string key="deployUsernameField">NSTextField</string>
 						<string key="statusBarItemMenu">NSMenu</string>
 						<string key="statusImageView">NSImageView</string>
 						<string key="statusLogTextView">GAAutoscrollTextView</string>
@@ -2389,26 +2384,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 						<object class="IBToOneOutletInfo" key="clientUseProxyButton">
 							<string key="name">clientUseProxyButton</string>
 							<string key="candidateClassName">NSButton</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="deployAppIdField">
-							<string key="name">deployAppIdField</string>
-							<string key="candidateClassName">NSTextField</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="deployLogTextView">
-							<string key="name">deployLogTextView</string>
-							<string key="candidateClassName">GAAutoscrollTextView</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="deployPasswordField">
-							<string key="name">deployPasswordField</string>
-							<string key="candidateClassName">NSSecureTextField</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="deployServicePasswordField">
-							<string key="name">deployServicePasswordField</string>
-							<string key="candidateClassName">NSTextField</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="deployUsernameField">
-							<string key="name">deployUsernameField</string>
-							<string key="candidateClassName">NSTextField</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="statusBarItemMenu">
 							<string key="name">statusBarItemMenu</string>

@@ -37,12 +37,6 @@
     IBOutlet NSTextField            *clientProxyUsernameField;
     IBOutlet NSTextField            *clientProxyPasswordField;
     
-    // 服务端部署
-    IBOutlet NSTextField            *deployAppIdField;
-    IBOutlet NSTextField            *deployUsernameField;
-    IBOutlet NSSecureTextField      *deployPasswordField;
-    IBOutlet NSTextField            *deployServicePasswordField;
-    IBOutlet GAAutoscrollTextView   *deployLogTextView;
 }
 
 - (IBAction)showMainWindow:(id)sender;
