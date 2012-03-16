@@ -56,7 +56,6 @@
 - (IBAction)showInstallPanel:(id)sender;
 
 - (IBAction)clearDeployLog:(id)sender;
-- (IBAction)deployButtonClicked:(id)sender;
 
 
 @property (assign) IBOutlet NSWindow *window;

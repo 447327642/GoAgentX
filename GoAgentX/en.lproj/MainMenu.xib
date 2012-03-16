@@ -2290,7 +2290,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 						<string key="applyClientSettings:">id</string>
 						<string key="clearDeployLog:">id</string>
 						<string key="clearStatusLog:">id</string>
-						<string key="deployButtonClicked:">id</string>
 						<string key="exitApplication:">id</string>
 						<string key="showHelp:">id</string>
 						<string key="showInstallPanel:">id</string>
@@ -2308,10 +2307,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 						</object>
 						<object class="IBActionInfo" key="clearStatusLog:">
 							<string key="name">clearStatusLog:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="deployButtonClicked:">
-							<string key="name">deployButtonClicked:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="exitApplication:">
