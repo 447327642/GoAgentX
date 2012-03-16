@@ -262,12 +262,6 @@
 }
 
 
-#pragma mark 服务端部署
-
-- (void)clearDeployLog:(id)sender {
-    [[deployLogTextView textStorage] setAttributedString:[[NSAttributedString alloc] initWithString:@""]];
-}
-
 #pragma mark -
 #pragma mark Window delegate
 

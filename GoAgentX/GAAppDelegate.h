@@ -49,8 +49,6 @@
 - (IBAction)applyClientSettings:(id)sender;
 - (IBAction)showInstallPanel:(id)sender;
 
-- (IBAction)clearDeployLog:(id)sender;
-
 
 @property (assign) IBOutlet NSWindow *window;
 

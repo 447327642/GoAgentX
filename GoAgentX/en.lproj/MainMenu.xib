@@ -2288,7 +2288,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 					<string key="superclassName">NSObject</string>
 					<dictionary class="NSMutableDictionary" key="actions">
 						<string key="applyClientSettings:">id</string>
-						<string key="clearDeployLog:">id</string>
 						<string key="clearStatusLog:">id</string>
 						<string key="exitApplication:">id</string>
 						<string key="showHelp:">id</string>
@@ -2299,10 +2298,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 					<dictionary class="NSMutableDictionary" key="actionInfosByName">
 						<object class="IBActionInfo" key="applyClientSettings:">
 							<string key="name">applyClientSettings:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="clearDeployLog:">
-							<string key="name">clearDeployLog:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="clearStatusLog:">
