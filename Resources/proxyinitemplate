@@ -6,7 +6,7 @@ gConfig = {
     #proxy without any content rewrite, to fetch IP blocked sites
     "PROXY_SERVER_SIMPLE" : "westchamberproxy.appspot.com",
     "BLOCKED_DOMAINS_URI" : "https://raw.github.com/liruqi/kernet/stable/Scripts/timeout.txt",
-    "REMOTE_DNS" : "168.95.1.1",
+    "REMOTE_DNS" : "{GoAgent:Local:RemoteDNS}",
     "SKIP_LOCAL_RESOLV" : True,
     "REDIRECT_DOMAINS": {
         "plus.url.google.com":"url",

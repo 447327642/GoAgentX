@@ -736,7 +736,7 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 												<object class="NSTextFieldCell" key="NSCell" id="661511297">
 													<int key="NSCellFlags">68288064</int>
 													<int key="NSCellFlags2">272630784</int>
-													<string key="NSContents">服务器App ID：</string>
+													<string key="NSContents">国外DNS：</string>
 													<reference key="NSSupport" ref="988758687"/>
 													<string key="NSCellIdentifier">_NS:3944</string>
 													<reference key="NSControlView" ref="992051264"/>
@@ -2138,15 +2138,15 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBBindingConnection" key="connection">
-						<string key="label">value: values.GoAgent:Local:AppId</string>
+						<string key="label">value: values.GoAgent:Local:RemoteDNS</string>
 						<reference key="source" ref="225364963"/>
 						<reference key="destination" ref="643082621"/>
 						<object class="NSNibBindingConnector" key="connector">
 							<reference key="NSSource" ref="225364963"/>
 							<reference key="NSDestination" ref="643082621"/>
-							<string key="NSLabel">value: values.GoAgent:Local:AppId</string>
+							<string key="NSLabel">value: values.GoAgent:Local:RemoteDNS</string>
 							<string key="NSBinding">value</string>
-							<string key="NSKeyPath">values.GoAgent:Local:AppId</string>
+							<string key="NSKeyPath">values.GoAgent:Local:RemoteDNS</string>
 							<int key="NSNibBindingConnectorVersion">2</int>
 						</object>
 					</object>

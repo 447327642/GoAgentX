@@ -364,13 +364,9 @@
     if (![self checkIfGoAgentInstalled]) {
         [self showInstallPanel:nil];
     }
-    
-    // 如果已经配置过 appid，则直接尝试连接，否则显示主窗口
-    if ([[[NSUserDefaults standardUserDefaults] objectForKey:@"GoAgent:Local:AppId"] length] > 0) {
-        [self toggleServiceStatus:nil];
-    } else {
-        [self showMainWindow:nil];
-    }    
+
+    [self showMainWindow:nil];
+    [self toggleServiceStatus:nil];
 }
 
 
