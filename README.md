@@ -20,8 +20,8 @@ GoAgentX for wcproxy是一个 wcproxy 在 Mac OS X 下的图形界面控制软�
 ## 如何使用
 
 1. 下载 GoAgentX for wcproxy
-1. 运行 GoAgentX，根据提示安装 wcproxy
-1. 设置浏览器代理 
+1. 运行 GoAgentX
+1. 设置浏览器HTTP/HTTPS 代理 
 
 ## 程序截图
 
