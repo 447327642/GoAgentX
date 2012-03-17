@@ -24,6 +24,7 @@
 		89B72CF414E934CF0027DC19 /* GACommandRunner.m in Sources */ = {isa = PBXBuildFile; fileRef = 89B72CF314E934CF0027DC19 /* GACommandRunner.m */; };
 		89B72D4614E956340027DC19 /* GoAgentDefaultSettings.plist in Resources */ = {isa = PBXBuildFile; fileRef = 89B72D4514E956340027DC19 /* GoAgentDefaultSettings.plist */; };
 		89B72D4A14E960BE0027DC19 /* proxyinitemplate in Resources */ = {isa = PBXBuildFile; fileRef = 89B72D4914E960BE0027DC19 /* proxyinitemplate */; };
+		F4D7E1831514B6B40067D8EC /* west-chamber-proxy in Resources */ = {isa = PBXBuildFile; fileRef = F4D7E1821514B6B40067D8EC /* west-chamber-proxy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +55,7 @@
 		89B72CF314E934CF0027DC19 /* GACommandRunner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GACommandRunner.m; sourceTree = "<group>"; };
 		89B72D4514E956340027DC19 /* GoAgentDefaultSettings.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = GoAgentDefaultSettings.plist; sourceTree = "<group>"; };
 		89B72D4914E960BE0027DC19 /* proxyinitemplate */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = proxyinitemplate; sourceTree = "<group>"; };
+		F4D7E1821514B6B40067D8EC /* west-chamber-proxy */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "west-chamber-proxy"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -155,6 +157,7 @@
 		89B72C7A14E8E1470027DC19 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				F4D7E1821514B6B40067D8EC /* west-chamber-proxy */,
 				89B72CEA14E926730027DC19 /* status_running.png */,
 				89B72CEB14E926730027DC19 /* status_stopped.png */,
 				89B72CDA14E90CC60027DC19 /* status_item_icon.png */,
@@ -227,6 +230,7 @@
 				89B72D4614E956340027DC19 /* GoAgentDefaultSettings.plist in Resources */,
 				89B72D4A14E960BE0027DC19 /* proxyinitemplate in Resources */,
 				8963E34114ED4A01008587B7 /* README.md in Resources */,
+				F4D7E1831514B6B40067D8EC /* west-chamber-proxy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

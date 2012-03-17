@@ -25,19 +25,16 @@
 
 
 - (NSString *)copyFolderToApplicationSupport:(NSString *)folder {
-    NSString *srcPath = [[self pathInApplicationSupportFolder:@"goagent"] stringByAppendingPathComponent:folder];
+    NSString *srcPath = [[NSBundle mainBundle] resourcePath];
+    NSLog(@"\nsrcPath: %@", srcPath);
     NSString *copyPath = [self pathInApplicationSupportFolder:folder];
+    NSLog(@"\ncopyPath: %@", copyPath);
     [[NSFileManager defaultManager] removeItemAtPath:copyPath error:NULL];
     [[NSFileManager defaultManager] createDirectoryAtPath:[copyPath stringByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:NULL];
-    [[NSFileManager defaultManager] copyItemAtPath:srcPath toPath:copyPath error:NULL];
+    [[NSFileManager defaultManager] copyItemAtPath:[srcPath stringByAppendingPathComponent:@"west-chamber-proxy"]
+                                            toPath:copyPath error:NULL];
     return copyPath;
 }
-
-
-- (NSString *)copyServerToApplicationSupport {
-    return [self copyFolderToApplicationSupport:@"server"];
-}
-
 
 - (NSString *)copyLocalToApplicationSupport {
     return [self copyFolderToApplicationSupport:@"local"];
@@ -113,47 +110,7 @@
 
 
 - (void)showInstallPanel:(id)sender {
-    NSAlert *alert = [NSAlert alertWithMessageText:@"尚未安装 goagent"
-                                     defaultButton:@"前往下载页面"
-                                   alternateButton:@"我已经下载了最新的 goagent"
-                                       otherButton:nil
-                         informativeTextWithFormat:@"如果您尚未下载过 goagent，请点击“前往下载页面”。下载后将压缩包解压，"
-                      "目录中将会有 local 和 server 两个目录，在下一步的选择框中请选择包含 local 和 server 的目录"];
-    
-    if ([alert runModal] == NSAlertDefaultReturn) {
-        [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/liruqi/west-chamber-season-3/zipball/master"]];
-    }
-    
-    NSOpenPanel *op = [NSOpenPanel openPanel];
-    op.title = @"请选择 west-chamber-proxy 所在的目录，这个目录包含westchamberproxy.py 文件";
-    op.prompt = @"选择";
-    op.canChooseFiles = NO;
-    op.canChooseDirectories = YES;
-    if ([op runModal] == NSFileHandlingPanelOKButton) {
-        [self installFromFolder:[[op URL] path]];
-        
-        if ([self checkIfGoAgentInstalled]) {
-            [[NSAlert alertWithMessageText:@"安装 west-chamber proxy 成功"
-                             defaultButton:@"确定"
-                           alternateButton:nil
-                               otherButton:nil
-                 informativeTextWithFormat:@"如果您还未部署过 App Engine 服务端，请先进入服务端部署标签页进行部署，再到客户端设置页进行设置，最后到状态标签页启动连接。"] runModal];
-            
-        } else {
-            [[NSAlert alertWithMessageText:@"安装 west-chamber proxy 失败"
-                             defaultButton:@"确定"
-                           alternateButton:nil
-                               otherButton:nil
-                 informativeTextWithFormat:@"您选择的目录没有包含 local 或 server 目录，或者不是正确的 west-chamber proxy 解压目录，请在客户端配置标签中尝试重新安装。"] runModal];
-        }
-        
-    } else {
-        [[NSAlert alertWithMessageText:@"尚未安装 west-chamber proxy"
-                         defaultButton:@"确定"
-                       alternateButton:nil
-                           otherButton:nil
-             informativeTextWithFormat:@"不安装 goagent 您将无法使用 goagent 的功能，您可以在客户端配置标签页重新进行安装 goagent"] runModal];
-    }
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/liruqi/GoAgentX/downloads"]];
 }
 
 
@@ -221,6 +178,7 @@
             proxyini = [proxyini stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"{%@}", key]
                                                            withString:value];
         }
+        NSLog(@"\ncurrent directory: %@", copyPath);
         [proxyini writeToFile:[copyPath stringByAppendingPathComponent:@"config.py"] atomically:YES encoding:NSUTF8StringEncoding error:NULL];
         
         [statusLogTextView clear];
@@ -288,11 +246,6 @@
     
     // 设置 MenuBar 图标
     [self setupStatusItem];
-    
-    // 如果没有安装 goagent 就提示安装
-    if (![self checkIfGoAgentInstalled]) {
-        [self showInstallPanel:nil];
-    }
 
     [self showMainWindow:nil];
     [self toggleServiceStatus:nil];
