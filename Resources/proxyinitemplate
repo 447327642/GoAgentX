@@ -74,6 +74,7 @@ gConfig = {
         "thepiratebay.org": True,
         "thepiratebay.se": True,
         "www.bbc.co.uk": True,
+        "chinadigitaltimes.net": True,
     },
     "CHINA_IP_LIST_FILE":"exclude-ip.json",
     "PAGE_RELOAD_HTML": """<html>

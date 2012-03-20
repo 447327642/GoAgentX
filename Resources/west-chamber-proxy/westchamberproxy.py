@@ -44,6 +44,7 @@ domainWhiteList = [
     "ge.net",
     "no-ip.com",
     "nbcsandiego.com",
+    "unity3d.com",
     ]
 
 class ThreadingHTTPServer(ThreadingMixIn, HTTPServer): pass
@@ -145,7 +146,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                     print ("DNS remote resolve: " + host + " => " + str(a))
                 if a['typename'] == 'CNAME':
                     return self.getip(a["data"])
-                self.dnsCache[host] = {"ip":a["data"], "expire":self.now + a["ttl"]}
+                self.dnsCache[host] = {"ip":a["data"], "expire":self.now + a["ttl"]*2 + 60}
                 return a["data"]
         if gOptions.log > 0: 
             print "authority: "+ str(response.authority)
@@ -207,7 +208,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 status = "HTTP/1.1 302 Found"
                 self.wfile.write(status + "\r\n")
                 self.wfile.write("Location: " + redirectUrl + "\r\n")
-                self.connection.close()
+                self.wfile.close()
                 return
 
             # Remove http://[host] , for google.com.hk
@@ -292,25 +293,34 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 self.wfile.write(response_data)
                 dataLength += len(response_data)
                 if gOptions.log > 1: print "data length: %d"%dataLength
+            self.wfile.close()
         except:
             if self.remote:
                 self.remote.close()
                 self.remote = None
 
             exc_type, exc_value, exc_traceback = sys.exc_info()
+             
+
+            if exc_type == socket.error:
+                code, msg = str(exc_value).split('] ')
+                code = code[1:].split(' ')[1]
+                if code in ["32"]: #errno.EPIPE
+                    if gOptions.log > 0: print "Detected remote disconnect: " + host
+                    self.wfile.close()
+                    return
+
             print "error in proxy: ", self.requestline
             print exc_type
             print str(exc_value) + " " + host
-            errpath = "unkown/host/" + host 
-            if exc_type == socket.error:
-                code, msg = str(exc_value).split('] ')
-                code = code[1:].replace(" ", "")
-                if code == "60": #timed out
-                    self.wfile.write("HTTP/1.1 200 OK\r\n\r\n")
-                    self.wfile.write(gConfig["PAGE_RELOAD_HTML"])
-                    return
-
-                errpath = code + "/host/" + host + "/?msg=" + urllib.quote(msg)
+            errpath = "unkown/host/" + host
+            if exc_type == socket.timeout or (exc_type == socket.error and code in ["60"]): #timed out
+                if gOptions.log > 0: print "add "+host+" to blocked domains"
+                gConfig["BLOCKED_DOMAINS"][host] = True
+                self.wfile.write("HTTP/1.1 200 OK\r\n\r\n")
+                self.wfile.write(gConfig["PAGE_RELOAD_HTML"])
+                return
+            
             traceback.print_tb(exc_traceback)
             (scm, netloc, path, params, query, _) = urlparse.urlparse(self.path)
             status = "HTTP/1.1 302 Found"
@@ -322,7 +332,6 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
                 self.wfile.write("Location: " + redirectUrl + "\r\n")
             else:
-                status = "HTTP/1.1 302 Found"
                 if (scm.upper() != "HTTP"):
                     msg = "schme-not-supported"
                 else:
@@ -330,7 +339,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 errpath = ("error/host/" + host + "/?msg=" + msg)
                 self.wfile.write(status + "\r\n")
                 self.wfile.write("Location: http://liruqi.info/post/18486575704/west-chamber-proxy#" + msg + "\r\n")
-            self.connection.close()
+            self.wfile.close()
             print "client connection closed"
 
         if errpath != "":
@@ -353,7 +362,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
         self.remote.connect((host, int(port)))
 
         Agent = 'WCProxy/1.0'
-        self.connection.send('HTTP/1.1'+' 200 Connection established\n'+
+        self.wfile.write('HTTP/1.1'+' 200 Connection established\n'+
                          'Proxy-agent: %s\n\n'%Agent)
         self._read_write()
         return
@@ -394,10 +403,7 @@ def start():
             line = line.split("#")[0]
             d = line.split()
             if (len(d) != 2): continue
-            #remove long domains
-            if len(d[1]) > 24:
-                continue
-            #print "read "+line
+            if gOptions.log > 1: print "read "+line
             regexp = d[1].replace(".", "\.").replace("*", ".*")
             try: grules.append((d[0], re.compile(regexp)))
             except: print "Invalid rule:", d[1]
@@ -424,7 +430,7 @@ def start():
         print "load blocked domains failed"
 
     print "Loaded", len(grules), " dns rules."
-    print "Set your browser's HTTP proxy to 127.0.0.1:%d"%(gOptions.port)
+    print "Set your browser's HTTP/HTTPS proxy to 127.0.0.1:%d"%(gOptions.port)
     server = ThreadingHTTPServer(("0.0.0.0", gOptions.port), ProxyHandler)
     try: server.serve_forever()
     except KeyboardInterrupt: exit()
