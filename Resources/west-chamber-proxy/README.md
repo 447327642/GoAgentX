@@ -1,6 +1,6 @@
 项目目的
 --------
-* 不需要服务器的本地翻墙代理工具。
+* 不依赖代理服务器的本地翻墙代理工具。
 * [项目维护地址](https://github.com/liruqi/west-chamber-season-3/tree/master/west-chamber-proxy)
 * [Follow up](https://plus.google.com/b/108661470402896863593/)
 * [捐赠本项目](https://me.alipay.com/liruqi)
@@ -16,7 +16,7 @@
 * Mac / Linux
 
     1. 下载项目代码: [zip](https://github.com/liruqi/west-chamber-season-3/zipball/master)
-    1. 解压缩，打开终端，cd 到代码目录，cd west-chamber-proxy; python westchamberproxy.py
+    1. 解压缩，打开终端，cd 到代码目录，cd west-chamber-proxy; 启动代理：./wcproxy start；关闭代理：./wcproxy stop。
     2. 把浏览器HTTP/HTTPS 代理设置为 127.0.0.1:1998。
 
 * Android
@@ -30,9 +30,10 @@
     1. 局域网内的其它设备(PC, Android 设备)上安装本代理，然后把 iOS 设备的 HTTP 代理设置到该设备上。（或者在国内有服务器的同学，自己搭建HTTP 代理）
     2. 类似GoAgent 那种iOS客户端的办法。需要越狱。单我本人没有iOS设备，所以，暂不研究了。
 
-* Chrome Extension
+* 代理设置
 
-    安装[SwitchySharp](https://chrome.google.com/webstore/detail/dpplabbmogkhghncfbfdeeokoefdjegm) 插件，然后导入这个设置 https://github.com/liruqi/west-chamber-season-3/raw/master/west-chamber-proxy/chrome/SwitchyOptions.bak
+    用[Flora_Pac](https://github.com/Leask/Flora_Pac) 做了一个 [.pac 文件](https://raw.github.com/liruqi/west-chamber-season-3/master/west-chamber-proxy/flora_pac.pac)。下载这个pac 文件，然后在代理设置中导入即可。
+    具体使用方法，在[这里](http://opliruqi.appspot.com/how) 更新。
 
 开发者
 ------
@@ -45,8 +46,10 @@ DNS污染
 
 IP封锁
 ------
-由于不依赖与第三方服务器，对于IP封锁也没有优美的解决方案。目前通过更新配置文件的方式，尽量避免IP封锁。
-现在是通过 Google code 上[SmartHosts项目](http://code.google.com/p/smarthosts/) 自动获取的[配置文件](http://smarthosts.googlecode.com/svn/trunk/hosts)
+
+1. 目前是通过 Google code 上[SmartHosts项目](http://code.google.com/p/smarthosts/) 自动获取的[配置文件](http://smarthosts.googlecode.com/svn/trunk/hosts), 来得到可用IP
+2. HTTP 方式下，对于IP被封锁且没有可用IP的站点(如 www.bullogger.com)，代理能够自动检测到 IP 封锁，并自动通过代理获取网页内容。(也可以手动在配置中增加IP封锁域名，可以加快代理速度)
+3. 现在还没有办法处理 HTTPS 下IP封锁的问题。
 
 可用性
 ------
@@ -63,7 +66,7 @@ IP封锁
 
 TODO
 ----
-* [ALL] 整理被blocked 的 IP列表，走网页代理
+* [ALL] 网页代理用Range 方法处理大文件下载
 * [ALL] merge accelerates from [ccp0101/dnschina](https://github.com/ccp0101/dnschina)
 * [Android] 实现系统HTTP 代理的设置，这样系统自带的浏览器也可以用。
 * [Android] 用 Java 重写代理逻辑，用户就不用下载依赖的 python 软件包。
@@ -77,6 +80,6 @@ UPDATE LOG
 * 2012-01-28 Windows 平台支持；国内站点 Comet 连接，停止重定向到网页代理。
 * 2012-01-31 停止维护chrome extension, 而是类似于goagent，直接提供代理程序，以及 SwitchySharp 备份。
 * 2012-02-24 修复Google plus 链接重定向错误 (plus.url.google.com => plus.url.google.com.hk)
-* 2012-02-29 修复不支持 GET path 中不带域名信息的服务器(例如www.swaneye.com)
+* 2012-03-17 代码重构。python 脚本中去掉了进程控制，增加了多个命令行参数，进程控制由shell 脚本实现。 
 
 

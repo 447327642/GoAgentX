@@ -2,18 +2,17 @@
 # -*- coding: utf-8 -*-
 
 gConfig = {
-    "PROXY_SERVER" : "http://opliruqi.appspot.com/",
+    "VERSION" : "20120325",
+    "PROXY_SERVER" : "http://annjonescnch.appspot.com/",
     #proxy without any content rewrite, to fetch IP blocked sites
     "PROXY_SERVER_SIMPLE" : "westchamberproxy.appspot.com",
-    "BLOCKED_DOMAINS_URI" : "https://raw.github.com/liruqi/kernet/stable/Scripts/timeout.txt",
+    "BLOCKED_DOMAINS_URI" : "https://raw.github.com/liruqi/west-chamber-season-3/master/west-chamber-proxy/status/timedout.txt",
     "REMOTE_DNS" : "{GoAgent:Local:RemoteDNS}",
-    "SKIP_LOCAL_RESOLV" : True,
+    "SKIP_LOCAL_RESOLV" : False,
     "REDIRECT_DOMAINS": {
         "plus.url.google.com":"url",
         "plus.url.google.com.hk":"q|url"
     },
-    #feed back slow down proxy, if you intend to improve this proxy, uncomment following line
-    #"FEEDBACK_LOG_SERVER" : "http://wcproxy.liruqi.info/",
     "LOCAL_PORT" : {GoAgent:Local:Port},
     "HSTS_DOMAINS" : {
         "developers.facebook.com": 1,
@@ -75,6 +74,23 @@ gConfig = {
         "thepiratebay.se": True,
         "www.bbc.co.uk": True,
         "chinadigitaltimes.net": True,
+        "www.wenxuecity.com": True,
+        "bbs.wenxuecity.com": True,
+        "www.blogger.com": True,
+        "blogger.com": True,
+    },
+    "BLOCKED_IPS": {
+        "70.86.20.29" : 1, #www.bullogger.com
+        "69.93.206.250": 1, #www.xys.org,
+        "174.121.98.156": 1,
+        "50.22.53.157": 1,
+        "50.22.53.155": 1,
+        "72.32.231.8": 1,
+        "174.121.66.230": 1,
+        "107.20.170.126": 1,
+        "204.236.224.226": 1,
+        "69.163.223.11": 1, #letscorp.net
+        "199.59.148.12": 1,
     },
     "CHINA_IP_LIST_FILE":"exclude-ip.json",
     "PAGE_RELOAD_HTML": """<html>

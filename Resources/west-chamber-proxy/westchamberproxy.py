@@ -12,7 +12,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from SocketServer import ThreadingMixIn
 from httplib import HTTPResponse, BadStatusLine
-import re, socket, struct, threading, traceback, sys, select, urlparse, signal, urllib, urllib2, json, time, argparse
+import re, socket, struct, threading, traceback, sys, select, urlparse, signal, urllib, urllib2, json, time
 import config
 
 grules = []
@@ -52,8 +52,14 @@ class ProxyHandler(BaseHTTPRequestHandler):
     remote = None
     dnsCache = {}
     now = 0
+    depth = 0
 
     def enableInjection(self, host, ip):
+        self.depth += 1
+        if self.depth > 3:
+            if gOptions.log>0: print host + " looping, exit"
+            return
+
         global gipWhiteList;
         print "check "+host + " " + ip
         if (host == ip):
@@ -160,15 +166,6 @@ class ProxyHandler(BaseHTTPRequestHandler):
         print ("DNS remote resolve failed: " + host)
         return host
     
-    def netlog(self, path):
-        if "FEEDBACK_LOG_SERVER" in gConfig:
-            if gOptions.log > 1: print "FEEDBACK_LOG: " + path
-            try:
-                urllib2.urlopen(gConfig["FEEDBACK_LOG_SERVER"] + path).close()
-            except:
-                pass
-            if gOptions.log > 1: print "end FEEDBACK_LOG" 
-        
     def proxy(self):
         doInject = False
         if gOptions.log > 0: print self.requestline
@@ -177,7 +174,6 @@ class ProxyHandler(BaseHTTPRequestHandler):
         if host.find(":") != -1:
             port = int(host.split(":")[1])
             host = host.split(":")[0]
-        errpath = ""
 
         try:
             redirectUrl = self.path
@@ -208,33 +204,31 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 status = "HTTP/1.1 302 Found"
                 self.wfile.write(status + "\r\n")
                 self.wfile.write("Location: " + redirectUrl + "\r\n")
-                self.wfile.close()
                 return
 
             # Remove http://[host] , for google.com.hk
             path = self.path[self.path.find(netloc) + len(netloc):]
 
-            if host in gConfig["BLOCKED_DOMAINS"]:
+            connectHost = self.getip(host)
+            if (host in gConfig["BLOCKED_DOMAINS"]) or (connectHost in gConfig["BLOCKED_IPS"]):
+                gConfig["BLOCKED_DOMAINS"][host] = True
+                if gOptions.log>0 : print "add ip "+ connectHost + " to block list"
+                gConfig["BLOCKED_IPS"][connectHost] = True
                 host = gConfig["PROXY_SERVER_SIMPLE"]
+                connectHost = self.getip(host)
                 path = self.path[len(scm)+2:]
                 self.headers["Host"] = gConfig["PROXY_SERVER_SIMPLE"]
                 print "use simple web proxy for " + path
             
-            self.lastHost = self.headers["Host"]
-            
-            while True:
+            if True:
                 inWhileList = False
                 for d in domainWhiteList:
                     if host.endswith(d):
                         if gOptions.log > 1: print host + " in domainWhiteList: " + d
                         inWhileList = True
 
-                connectHost = host
-                if not inWhileList:
-                    connectHost = self.getip(host)
-
                 doInject = self.enableInjection(host, connectHost)
-                if self.remote is None or self.lastHost != self.headers["Host"]:
+                if True:
                     self.remote = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     if gOptions.log > 1: print "connect to " + host + ":" + str(port)
                     self.remote.connect((connectHost, port))
@@ -247,6 +241,9 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 print " ".join((self.command, path, self.request_version)) + "\r\n"
                 self.remote.send(" ".join((self.command, path, self.request_version)) + "\r\n")
                 # Send headers
+                if host[-12:] == ".appspot.com":
+                    print "add version code " + gConfig["VERSION"] + " in HTTP header"
+                    self.headers["X-WCProxy"] = gConfig["VERSION"]
                 self.remote.send(str(self.headers) + "\r\n")
                 # Send Post data
                 if(self.command=='POST'):
@@ -265,13 +262,13 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 except:
                     raise
 
-                if doInject and (response.status == 400 or response.status == 405 or badStatusLine) and host != gConfig["PROXY_SERVER_SIMPLE"]:
+                if doInject and (response.status == 400 or response.status == 405 or badStatusLine) and host != gConfig["PROXY_SERVER_SIMPLE"] and host != gConfig["PROXY_SERVER"][7:-1]:
                     self.remote.close()
                     self.remote = None
+                    if gOptions.log > 0: print host + " seem not support inject, " + msg
                     domainWhiteList.append(host)
-                    errpath = (msg + "/host/" + host)
-                    continue
-                break
+                    return self.proxy()
+
             # Reply to the browser
             status = "HTTP/1.1 " + str(response.status) + " " + response.reason
             self.wfile.write(status + "\r\n")
@@ -293,57 +290,54 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 self.wfile.write(response_data)
                 dataLength += len(response_data)
                 if gOptions.log > 1: print "data length: %d"%dataLength
-            self.wfile.close()
         except:
             if self.remote:
                 self.remote.close()
                 self.remote = None
 
+            (scm, netloc, path, params, query, _) = urlparse.urlparse(self.path)
+            status = "HTTP/1.1 302 Found"
+            if (netloc == urlparse.urlparse( gConfig["PROXY_SERVER"] )[1]) or (netloc == gConfig["PROXY_SERVER_SIMPLE"]) or (scm.upper() != "HTTP"):
+                msg = scm + "-" + netloc
+                self.wfile.write(status + "\r\n")
+                self.wfile.write("Location: http://westchamberproxy.appspot.com/#" + msg + "\r\n")
+                return
+
             exc_type, exc_value, exc_traceback = sys.exc_info()
-             
 
             if exc_type == socket.error:
                 code, msg = str(exc_value).split('] ')
                 code = code[1:].split(' ')[1]
-                if code in ["32"]: #errno.EPIPE
+                if code in ["32", "10053"]: #errno.EPIPE, 10053 is for Windows
                     if gOptions.log > 0: print "Detected remote disconnect: " + host
-                    self.wfile.close()
                     return
-
+                if code in ["61"]: #server not support injection
+                    if doInject:
+                        print "try not inject " + host
+                        domainWhiteList.append(host)
+                        self.proxy()
+                        return
             print "error in proxy: ", self.requestline
             print exc_type
             print str(exc_value) + " " + host
-            errpath = "unkown/host/" + host
-            if exc_type == socket.timeout or (exc_type == socket.error and code in ["60"]): #timed out
+            if exc_type == socket.timeout or (exc_type == socket.error and code in ["60", "110", "10060"]): #timed out, 10060 is for Windows
                 if gOptions.log > 0: print "add "+host+" to blocked domains"
                 gConfig["BLOCKED_DOMAINS"][host] = True
-                self.wfile.write("HTTP/1.1 200 OK\r\n\r\n")
-                self.wfile.write(gConfig["PAGE_RELOAD_HTML"])
-                return
+                return self.proxy()
             
             traceback.print_tb(exc_traceback)
-            (scm, netloc, path, params, query, _) = urlparse.urlparse(self.path)
-            status = "HTTP/1.1 302 Found"
-            if (netloc != urlparse.urlparse( gConfig["PROXY_SERVER"] )[1]):
+            if doInject:
                 self.wfile.write(status + "\r\n")
                 redirectUrl = gConfig["PROXY_SERVER"] + self.path[7:]
                 if host in gConfig["HSTS_ON_EXCEPTION_DOMAINS"]:
                     redirectUrl = "https://" + self.path[7:]
-
                 self.wfile.write("Location: " + redirectUrl + "\r\n")
-            else:
-                if (scm.upper() != "HTTP"):
-                    msg = "schme-not-supported"
-                else:
-                    msg = "web-proxy-fail"
-                errpath = ("error/host/" + host + "/?msg=" + msg)
+            else :
+                msg = scm + "-" + host 
                 self.wfile.write(status + "\r\n")
-                self.wfile.write("Location: http://liruqi.info/post/18486575704/west-chamber-proxy#" + msg + "\r\n")
-            self.wfile.close()
+                self.wfile.write("Location: http://westchamberproxy.appspot.com/#" + msg + "\r\n")
             print "client connection closed"
 
-        if errpath != "":
-            self.netlog(errpath)
     
     def do_GET(self):
         #some sites(e,g, weibo.com) are using comet (persistent HTTP connection) to implement server push
@@ -436,17 +430,27 @@ def start():
     except KeyboardInterrupt: exit()
     
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='west chamber proxy')
-    parser.add_argument('--port', default=gConfig["LOCAL_PORT"], type=int,
+    try :
+        import argparse
+        parser = argparse.ArgumentParser(description='west chamber proxy')
+        parser.add_argument('--port', default=gConfig["LOCAL_PORT"], type=int,
                    help='local port')
-    parser.add_argument('--log', default=1, type=int, help='log level, 0-3')
-    parser.add_argument('--pidfile', default='', help='pid file')
-    gOptions = parser.parse_args()
-    if gOptions.pidfile != "":
-        import os
-        pid = str(os.getpid())
-        f = open(gOptions.pidfile,'w')
-        print "Writing pid " + pid + " to "+gOptions.pidfile
-        f.write(pid)
-        f.close()
+        parser.add_argument('--log', default=1, type=int, help='log level, 0-3')
+        parser.add_argument('--pidfile', default='', help='pid file')
+        gOptions = parser.parse_args()
+        if gOptions.pidfile != "":
+            import os
+            pid = str(os.getpid())
+            f = open(gOptions.pidfile,'w')
+            print "Writing pid " + pid + " to "+gOptions.pidfile
+            f.write(pid)
+            f.close()
+    except :
+        #import argparse error, e.g. python26
+        print "import argparse error"
+        class option:
+            def __init__(self): 
+                self.log = 1
+                self.port = gConfig["LOCAL_PORT"]
+        gOptions = option()
     start()
