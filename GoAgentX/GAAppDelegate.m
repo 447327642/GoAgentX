@@ -177,6 +177,7 @@
             }
             proxyini = [proxyini stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"{%@}", key]
                                                            withString:value];
+            NSLog(@"\nkey-value: %@ - %@", key, value);
         }
         NSLog(@"\ncurrent directory: %@", copyPath);
         [proxyini writeToFile:[copyPath stringByAppendingPathComponent:@"config.py"] atomically:YES encoding:NSUTF8StringEncoding error:NULL];

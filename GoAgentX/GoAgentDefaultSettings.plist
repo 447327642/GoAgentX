@@ -7,7 +7,7 @@
 	<key>GoAgent:Local:RemoteDNS</key>
 	<string>202.14.67.4</string>
 	<key>GoAgent:Local:ServicePassword</key>
-	<string></string>
+	<string>annjonescnch</string>
 	<key>GoAgent:Local:GAEProfile</key>
 	<string>google_cn</string>
 	<key>GoAgent:Local:ConnectMode</key>

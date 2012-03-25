@@ -3,7 +3,7 @@
 
 gConfig = {
     "VERSION" : "20120325",
-    "PROXY_SERVER" : "http://annjonescnch.appspot.com/",
+    "PROXY_SERVER" : "http://{GoAgent:Local:ServicePassword}.appspot.com/",
     #proxy without any content rewrite, to fetch IP blocked sites
     "PROXY_SERVER_SIMPLE" : "westchamberproxy.appspot.com",
     "BLOCKED_DOMAINS_URI" : "https://raw.github.com/liruqi/west-chamber-season-3/master/west-chamber-proxy/status/timedout.txt",
