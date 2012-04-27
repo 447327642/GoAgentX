@@ -1,0 +1,10 @@
+{
+    "PROXY_PASSWD" : "liruqi@gmail.com",
+    "BLOCKED_IPS_M16": {
+        "174.129" : 1
+    },
+    "BLOCKED_IPS_M24": {
+        "199.16.156" : 1
+    },
+    "DNS_PROTOCOL": "udp"
+}
