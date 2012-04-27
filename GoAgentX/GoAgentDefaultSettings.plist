@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>GoAgent:Local:Port</key>
-	<string>1989</string>
+	<string>1998</string>
 	<key>GoAgent:Local:RemoteDNS</key>
 	<string>202.14.67.4</string>
 	<key>GoAgent:Local:ServicePassword</key>
-	<string>annjonescnch</string>
+	<string>goagent-hrd</string>
 	<key>GoAgent:Local:GAEProfile</key>
 	<string>google_cn</string>
 	<key>GoAgent:Local:ConnectMode</key>
