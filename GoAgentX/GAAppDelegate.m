@@ -25,19 +25,16 @@
 
 
 - (NSString *)copyFolderToApplicationSupport:(NSString *)folder {
-    NSString *srcPath = [[self pathInApplicationSupportFolder:@"goagent"] stringByAppendingPathComponent:folder];
+    NSString *srcPath = [[NSBundle mainBundle] resourcePath];
+    NSLog(@"\nsrcPath: %@", srcPath);
     NSString *copyPath = [self pathInApplicationSupportFolder:folder];
+    NSLog(@"\ncopyPath: %@", copyPath);
     [[NSFileManager defaultManager] removeItemAtPath:copyPath error:NULL];
     [[NSFileManager defaultManager] createDirectoryAtPath:[copyPath stringByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:NULL];
-    [[NSFileManager defaultManager] copyItemAtPath:srcPath toPath:copyPath error:NULL];
+    [[NSFileManager defaultManager] copyItemAtPath:[srcPath stringByAppendingPathComponent:@"west-chamber-proxy"]
+                                            toPath:copyPath error:NULL];
     return copyPath;
 }
-
-
-- (NSString *)copyServerToApplicationSupport {
-    return [self copyFolderToApplicationSupport:@"server"];
-}
-
 
 - (NSString *)copyLocalToApplicationSupport {
     return [self copyFolderToApplicationSupport:@"local"];
@@ -95,9 +92,9 @@
 
 - (BOOL)checkIfGoAgentInstalled {
     NSString *goagentPath = [self pathInApplicationSupportFolder:@"goagent"];
-    NSString *proxypyPath  = [[goagentPath stringByAppendingPathComponent:@"local"] stringByAppendingPathComponent:@"proxy.py"];
-    NSString *fetchpyPath = [[[goagentPath stringByAppendingPathComponent:@"server"] stringByAppendingPathComponent:@"python"] stringByAppendingPathComponent:@"fetch.py"];
-    return [[NSFileManager defaultManager] fileExistsAtPath:proxypyPath] && [[NSFileManager defaultManager] fileExistsAtPath:fetchpyPath];
+    NSString *proxypyPath  = [[goagentPath stringByAppendingPathComponent:@"local"] stringByAppendingPathComponent:@"westchamberproxy.py"];
+    
+    return [[NSFileManager defaultManager] fileExistsAtPath:proxypyPath];
 }
 
 
@@ -106,56 +103,14 @@
     [[NSFileManager defaultManager] removeItemAtPath:goagentPath error:NULL];
     [[NSFileManager defaultManager] createDirectoryAtPath:goagentPath withIntermediateDirectories:YES attributes:nil error:NULL];
     
-    [[NSFileManager defaultManager] copyItemAtPath:[path stringByAppendingPathComponent:@"local"]
+    [[NSFileManager defaultManager] copyItemAtPath:path
                                             toPath:[goagentPath stringByAppendingPathComponent:@"local"] error:NULL];
     
-    [[NSFileManager defaultManager] copyItemAtPath:[path stringByAppendingPathComponent:@"server"]
-                                            toPath:[goagentPath stringByAppendingPathComponent:@"server"] error:NULL];
 }
 
 
 - (void)showInstallPanel:(id)sender {
-    NSAlert *alert = [NSAlert alertWithMessageText:@"尚未安装 goagent"
-                                     defaultButton:@"前往下载页面"
-                                   alternateButton:@"我已经下载了最新的 goagent"
-                                       otherButton:nil
-                         informativeTextWithFormat:@"如果您尚未下载过 goagent，请点击“前往下载页面”。下载后将压缩包解压，"
-                      "目录中将会有 local 和 server 两个目录，在下一步的选择框中请选择包含 local 和 server 的目录"];
-    
-    if ([alert runModal] == NSAlertDefaultReturn) {
-        [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://code.google.com/p/goagent/"]];
-    }
-    
-    NSOpenPanel *op = [NSOpenPanel openPanel];
-    op.title = @"请选择包含 goagent 所在的目录，这个目录包含 local 和 server 两个目录";
-    op.prompt = @"选择";
-    op.canChooseFiles = NO;
-    op.canChooseDirectories = YES;
-    if ([op runModal] == NSFileHandlingPanelOKButton) {
-        [self installFromFolder:[[op URL] path]];
-        
-        if ([self checkIfGoAgentInstalled]) {
-            [[NSAlert alertWithMessageText:@"安装 goagent 成功"
-                             defaultButton:@"确定"
-                           alternateButton:nil
-                               otherButton:nil
-                 informativeTextWithFormat:@"如果您还未部署过 App Engine 服务端，请先进入服务端部署标签页进行部署，再到客户端设置页进行设置，最后到状态标签页启动连接。"] runModal];
-            
-        } else {
-            [[NSAlert alertWithMessageText:@"安装 goagent 失败"
-                             defaultButton:@"确定"
-                           alternateButton:nil
-                               otherButton:nil
-                 informativeTextWithFormat:@"您选择的目录没有包含 local 或 server 目录，或者不是正确的 goagent 解压目录，请在客户端配置标签中尝试重新安装。"] runModal];
-        }
-        
-    } else {
-        [[NSAlert alertWithMessageText:@"尚未安装 goagent"
-                         defaultButton:@"确定"
-                       alternateButton:nil
-                           otherButton:nil
-             informativeTextWithFormat:@"不安装 goagent 您将无法使用 goagent 的功能，您可以在客户端配置标签页重新进行安装 goagent"] runModal];
-    }
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/liruqi/GoAgentX/downloads"]];
 }
 
 
@@ -222,14 +177,16 @@
             }
             proxyini = [proxyini stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"{%@}", key]
                                                            withString:value];
+            NSLog(@"\nkey-value: %@ - %@", key, value);
         }
-        [proxyini writeToFile:[copyPath stringByAppendingPathComponent:@"proxy.ini"] atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+        NSLog(@"\ncurrent directory: %@", copyPath);
+        [proxyini writeToFile:[copyPath stringByAppendingPathComponent:@"config.py"] atomically:YES encoding:NSUTF8StringEncoding error:NULL];
         
         [statusLogTextView clear];
         [statusLogTextView appendString:@"正在启动...\n"];
         
         // 启动代理
-        NSArray *arguments = [NSArray arrayWithObjects:@"python", @"proxy.py", nil];
+        NSArray *arguments = [NSArray arrayWithObjects:@"python", @"westchamberproxy.py", nil];
         [runner runCommand:@"/usr/bin/env"
           currentDirectory:copyPath
                  arguments:arguments
@@ -264,77 +221,6 @@
 }
 
 
-#pragma mark 服务端部署
-
-- (void)clearDeployLog:(id)sender {
-    [[deployLogTextView textStorage] setAttributedString:[[NSAttributedString alloc] initWithString:@""]];
-}
-
-
-- (void)deployButtonClicked:(id)sender {
-    static GACommandRunner *runner = nil;
-    if (runner == nil) {
-        runner = [GACommandRunner new];
-    }
-    
-    if ([runner isTaskRunning]) {
-        NSAlert *alert = [NSAlert alertWithMessageText:@"部署服务端"
-                                         defaultButton:@"确定"
-                                       alternateButton:@"取消"
-                                           otherButton:@"仅停止部署"
-                             informativeTextWithFormat:@"正在部署服务端，是否取消当前的进程，重新开始进行部署？"];
-        NSInteger ret = [alert runModal];
-        if (ret == NSAlertAlternateReturn) {
-            return;
-        } else if (ret == NSAlertOtherReturn) {
-            [runner terminateTask];
-            return;
-        }
-    }
-    
-    
-    // 复制一份 server 到 Application Support
-    NSString *copyPath = [self copyServerToApplicationSupport];
-    
-    // 如果有服务密码，修改 fetch.py
-    NSString *servicePassword = deployServicePasswordField.stringValue;
-    if (servicePassword.length > 0) {
-        NSString *fetchpyPath = [[copyPath stringByAppendingPathComponent:@"python"] stringByAppendingPathComponent:@"fetch.py"];
-        NSString *content = [[NSString alloc] initWithContentsOfFile:fetchpyPath encoding:NSUTF8StringEncoding error:NULL];
-        content = [content stringByReplacingOccurrencesOfString:@"__password__ = ''"
-                                                     withString:[NSString stringWithFormat:@"__password__ = '%@'", servicePassword]
-                                                        options:NSLiteralSearch
-                                                          range:NSMakeRange(0, 300)];
-        [content writeToFile:fetchpyPath atomically:YES encoding:NSUTF8StringEncoding error:NULL];
-    }
-    
-    // 启动部署进程
-    NSArray *arguments = [NSArray arrayWithObjects:@"uploaddir=python", @"python", @"uploader.zip", nil];
-    NSArray *input = [NSArray arrayWithObjects:
-                      deployAppIdField.stringValue ?: @"",
-                      deployUsernameField.stringValue ?: @"",
-                      deployPasswordField.stringValue ?: @"",
-                      @"",
-                      nil];
-    [deployLogTextView clear];
-    [deployLogTextView appendString:@"开始部署...\n"];
-    [runner runCommand:@"/usr/bin/env"
-      currentDirectory:copyPath
-             arguments:arguments
-             inputText:[input componentsJoinedByString:@"\n"]
-        outputTextView:deployLogTextView
-    terminationHandler:^(NSTask *theTask) {
-        if ([theTask terminationStatus] == 0) {
-            [deployLogTextView appendString:@"部署成功"];
-        } else {
-            [deployLogTextView appendString:@"部署失败，请查看日志并检查设置是否正确"];
-        }
-        
-        [[NSFileManager defaultManager] removeItemAtPath:copyPath error:NULL];
-    }];
-}
-
-
 #pragma mark -
 #pragma mark Window delegate
 
@@ -361,18 +247,9 @@
     
     // 设置 MenuBar 图标
     [self setupStatusItem];
-    
-    // 如果没有安装 goagent 就提示安装
-    if (![self checkIfGoAgentInstalled]) {
-        [self showInstallPanel:nil];
-    }
-    
-    // 如果已经配置过 appid，则直接尝试连接，否则显示主窗口
-    if ([[[NSUserDefaults standardUserDefaults] objectForKey:@"GoAgent:Local:AppId"] length] > 0) {
-        [self toggleServiceStatus:nil];
-    } else {
-        [self showMainWindow:nil];
-    }    
+
+    [self showMainWindow:nil];
+    [self toggleServiceStatus:nil];
 }
 
 

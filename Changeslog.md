@@ -1,3 +1,7 @@
+## GoAgentX for wcproxy v1.0.3
+
+* 使用西厢代理的最新版本
+
 ## GoAgentX v1.0.2
 
 * [NEW] 增加直接程序内设置 GoAgnetX 随用户登录启动功能

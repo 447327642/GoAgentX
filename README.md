@@ -1,15 +1,16 @@
-# GoAgentX
+# GoAgentX for wcproxy
 
-GoAgentX 是一个 goagent 在 Mac OS X 下的图形界面控制软件，方便一般用户在 Mac OS X 上部署、配置和使用 goagent。
+GoAgentX for wcproxy是一个 wcproxy 在 Mac OS X 下的图形界面控制软件，方便一般用户在 Mac OS X 上部署、配置和使用 wcproxy。
 
-关于 goagent 的介绍请参见 <http://code.google.com/p/goagent/>。
+关于 wcproxy 的介绍请参见 <https://github.com/liruqi/west-chamber-season-3>。
+
+基于 <https://github.com/ohdarling/GoAgentX> 修改。
 
 ## 功能
 
-* 部署 goagent 服务端到 App Engine
 * 图形化界面设置客户端连接参数
 * MenuBar 图标，直接控制连接状态
-* 启动时自动连接 goagent
+* 启动时自动连接 wcproxy
 
 ## 要求
 
@@ -18,47 +19,35 @@ GoAgentX 是一个 goagent 在 Mac OS X 下的图形界面控制软件，方便�
 
 ## 如何使用
 
-1. 申请 Google App Engine 并创建 appid
-1. 前往 <http://code.google.com/p/goagent/> goagent v1.7.10 
-1. 下载 GoAgentX <https://github.com/ohdarling/GoAgentX/downloads>
-1. 运行 GoAgentX，根据提示安装 goagent
-1. 进入 GoAgentX 服务端部署标签，填写相关信息后，点部署来部署 goagent 到 App Engine
-1. 进入 GoAgentX 客户端设置标签，填写之前申请的 App Engine appid 以及服务密码，并根据实际情况选择连接方式和服务器
-1. 进入 GoAgentX 状态标签，点击启动，如果显示启动成功则可以开始使用
-1. 剩余使用方式步骤请参见 [goagent 简易教程](http://code.google.com/p/goagent/#简易教程)
-
-如果需要 GoAgentX 自动在用户登录时自动运行，可以在
-
-    系统偏好设置》用户与群组》登录项
-
-中添加 GoAgentX 到自动启动程序列表。
+1. 下载 GoAgentX for wcproxy
+1. 运行 GoAgentX
+1. 设置浏览器HTTP/HTTPS 代理 
 
 ## 程序截图
 
-![程序截图](https://github.com/ohdarling/GoAgentX/raw/master/Screenshot.png)
+![程序截图](https://github.com/liruqi/GoAgentX/raw/devel/Screenshot.png)
 
 ## 如何编译
 
 获取代码：
 
-    git clone https://github.com/ohdarling/GoAgentX
+    git clone https://github.com/liruqi/GoAgentX
 
 然后打开 Xcode 项目 GoAgentX.xcodeproj 进行编译即可。
 
 ## 如何提问题
 
-进入 <https://github.com/ohdarling/GoAgentX/issues/new> 页面填写需求信息或 Bug 即可。
+进入 <https://github.com/liruqi/GoAgentX/> 页面填写需求信息或 Bug 即可。
 
 当然，你也可以 fork 这个项目，修改后申请 Pull Request，我会尽快合并。
 
 ## 相关链接
 
-* [goagent](http://code.google.com/p/goagent/)
-* [Google App Engine](https://appengine.google.com/)
+* [wcproxy](https://github.com/liruqi/west-chamber-season-3)
 
 ## 关于
 
-你可以在 Twitter 上关注我：[@ohdarling88](http://twitter.com/ohdarling88)
+你可以在 Twitter 上关注我：[@liruqi](http://twitter.com/liruqi)
 
 ## 许可
 
