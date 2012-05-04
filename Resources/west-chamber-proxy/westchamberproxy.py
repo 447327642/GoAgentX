@@ -11,7 +11,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from SocketServer import ThreadingMixIn
 from httplib import HTTPResponse, BadStatusLine
-import os, re, socket, struct, threading, traceback, sys, select, urlparse, signal, urllib, urllib2, time, hashlib, binascii, zlib, httplib, errno
+import os, re, socket, struct, threading, traceback, sys, select, urlparse, signal, urllib, urllib2, time, hashlib, binascii, zlib, httplib, errno, string
 try:
     import OpenSSL
 except ImportError:
@@ -234,6 +234,10 @@ def isIpBlocked(ip):
             return True
     return False
 
+def isDomainBlocked(host):
+    rootDomain = string.join(host.split('.')[-2:], '.')
+    return (host in gConfig["BLOCKED_DOMAINS"]) or (rootDomain in gConfig["BLOCKED_DOMAINS"])
+
 def urlfetch(url, payload, method, headers, fetchhost, fetchserver, password=None, dns=None, on_error=None):
     errors = []
     params = {'url':url, 'method':method, 'headers':headers, 'payload':payload}
@@ -249,6 +253,7 @@ def urlfetch(url, payload, method, headers, fetchhost, fetchserver, password=Non
             logging.debug('urlfetch %r by %r', url, fetchserver)
             request = urllib2.Request(fetchserver, zlib.compress(params, 9))
             request.add_header('Content-Type', '')
+            request.add_header("X-WCProxy", gConfig["VERSION"])
             response = urllib2.urlopen(request)
             compressed = response.read(1)
 
@@ -606,9 +611,11 @@ class ProxyHandler(BaseHTTPRequestHandler):
             path = self.path[self.path.find(netloc) + len(netloc):]
 
             connectHost = self.getip(host)
-            if (host in gConfig["BLOCKED_DOMAINS"]) or isIpBlocked(connectHost):
+            rootDomain = string.join(host.split('.')[-2:], '.')
+            
+            if isDomainBlocked(host) or isIpBlocked(connectHost):
                 gConfig["BLOCKED_DOMAINS"][host] = True
-                if gOptions.log>0 : print "add ip "+ connectHost + " to block list"
+                logging.debug(host + " blocked, try goagent.")
                 return self.do_METHOD_Tunnel()
             
             if True:
@@ -631,11 +638,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                     path = "/"
                 print " ".join((self.command, path, self.request_version)) + "\r\n"
                 self.remote.send(" ".join((self.command, path, self.request_version)) + "\r\n")
-                # Send headers
-                if host[-12:] == ".appspot.com":
-                    print "add version code " + gConfig["VERSION"] + " in HTTP header"
-                    self.headers["X-WCProxy"] = gConfig["VERSION"]
-                    self.headers["X-WCPasswd"] = gConfig["PROXY_PASSWD"]
+                
                 self.remote.send(str(self.headers) + "\r\n")
                 # Send Post data
                 if(self.command=='POST'):
@@ -732,7 +735,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
         host, port = self.path.split(":")
         ip = self.getip(host)
         try:
-            if not isIpBlocked(ip):
+            if not (isDomainBlocked(host) or isIpBlocked(ip)):
                 self.remote = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 print ("SSL: connect " + host + ":ip:" + ip)
                 self.remote.connect((ip, int(port)))
@@ -845,6 +848,90 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
     def fetch(self, url, payload, method, headers):
         return urlfetch(url, payload, method, headers, gConfig['GOAGENT_FETCHHOST'], "https://" + gConfig["GOAGENT_FETCHHOST"] + "/fetch.py?", password=gConfig["GOAGENT_PASSWORD"])
+
+    def rangefetch(self, m, data):
+        m = map(int, m.groups())
+        if 'range' in self.headers:
+            content_range = 'bytes %d-%d/%d' % (m[0], m[1], m[2])
+            req_range = re.search(r'(\d+)?-(\d+)?', self.headers['range'])
+            if req_range:
+                req_range = [u and int(u) for u in req_range.groups()]
+                if req_range[0] is None:
+                    if req_range[1] is not None:
+                        if not (m[1]-m[0]+1==req_range[1] and m[1]+1==m[2]):
+                            return False
+                        if m[2] >= req_range[1]:
+                            content_range = 'bytes %d-%d/%d' % (req_range[1], m[2]-1, m[2])
+                else:
+                    if req_range[1] is not None:
+                        if not (m[0]==req_range[0] and m[1]==req_range[1]):
+                            return False
+                        if m[2] - 1 > req_range[1]:
+                            content_range = 'bytes %d-%d/%d' % (req_range[0], req_range[1], m[2])
+            data['headers']['Content-Range'] = content_range
+            data['headers']['Content-Length'] = m[2]-m[0]
+        elif m[0] == 0:
+            data['code'] = 200
+            data['headers']['Content-Length'] = m[2]
+            del data['headers']['Content-Range']
+
+        self.wfile.write('%s %d %s\r\n%s\r\n' % (self.protocol_version, data['code'], 'OK', data['headers']))
+        if 'response' in data:
+            response = data['response']
+            bufsize = gConfig['AUTORANGE_BUFSIZE']
+            if data['headers'].get('Content-Type', '').startswith('video/'):
+                bufsize = gConfig['AUTORANGE_WAITSIZE']
+            while 1:
+                content = response.read(bufsize)
+                if not content:
+                    response.close()
+                    break
+                self.wfile.write(content)
+                bufsize = gConfig['AUTORANGE_BUFSIZE']
+        else:
+            self.wfile.write(data['content'])
+
+        start = m[1] + 1
+        end   = m[2] - 1
+        failed = 0
+        logging.info('>>>>>>>>>>>>>>> Range Fetch started(%r)', self.headers.get('Host'))
+        while start < end:
+            if failed > 16:
+                break
+            self.headers['Range'] = 'bytes=%d-%d' % (start, min(start+gConfig['AUTORANGE_MAXSIZE']-1, end))
+            retval, data = self.fetch(self.path, '', self.command, str(self.headers))
+            if retval != 0 or data['code'] >= 400:
+                failed += 1
+                seconds = random.randint(2*failed, 2*(failed+1))
+                logging.error('Range Fetch fail %d times, retry after %d secs!', failed, seconds)
+                time.sleep(seconds)
+                continue
+            if 'Location' in data['headers']:
+                logging.info('Range Fetch got a redirect location:%r', data['headers']['Location'])
+                self.path = data['headers']['Location']
+                failed += 1
+                continue
+            m = re.search(r'bytes\s+(\d+)-(\d+)/(\d+)', data['headers'].get('Content-Range',''))
+            if not m:
+                failed += 1
+                logging.error('Range Fetch fail %d times, data[\'headers\']=%s', failed, data['headers'])
+                continue
+            start = int(m.group(2)) + 1
+            logging.info('>>>>>>>>>>>>>>> %s %d' % (data['headers']['Content-Range'], end+1))
+            failed = 0
+            if 'response' in data:
+                response = data['response']
+                while 1:
+                    content = response.read(gConfig['AUTORANGE_BUFSIZE'])
+                    if not content:
+                        response.close()
+                        break
+                    self.wfile.write(content)
+            else:
+                self.wfile.write(data['content'])
+        logging.info('>>>>>>>>>>>>>>> Range Fetch ended(%r)', self.headers.get('Host'))
+        return True
+
 
     # reslove ssl from http://code.google.com/p/python-proxy/
     def _read_write(self):
