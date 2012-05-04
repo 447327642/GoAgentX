@@ -25,7 +25,7 @@ GoAgentX for wcproxy是一个 wcproxy 在 Mac OS X 下的图形界面控制软�
 
 ## 程序截图
 
-![程序截图](https://github.com/liruqi/GoAgentX/raw/master/Screenshot.png)
+![程序截图](https://github.com/liruqi/GoAgentX/raw/devel/Screenshot.png)
 
 ## 如何编译
 
