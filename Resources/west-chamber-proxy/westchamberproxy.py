@@ -236,7 +236,11 @@ def isIpBlocked(ip):
 
 def isDomainBlocked(host):
     rootDomain = string.join(host.split('.')[-2:], '.')
-    return (host in gConfig["BLOCKED_DOMAINS"]) or (rootDomain in gConfig["BLOCKED_DOMAINS"])
+    if (host in gConfig["BLOCKED_DOMAINS"]):
+        return True
+    if rootDomain not in ["nicovideo.jp", "facebook.com", "twitter.com"]:
+        return rootDomain in gConfig["BLOCKED_DOMAINS"]
+    return False
 
 def urlfetch(url, payload, method, headers, fetchhost, fetchserver, password=None, dns=None, on_error=None):
     errors = []
