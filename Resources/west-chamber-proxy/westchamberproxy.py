@@ -230,7 +230,7 @@ def urlfetch(url, payload, method, headers, fetchhost, fetchserver, password=Non
             logging.debug('urlfetch %r by %r', url, fetchserver)
             request = urllib2.Request(fetchserver, zlib.compress(params, 9))
             request.add_header('Content-Type', '')
-            request.add_header("X-WCProxy", gConfig["VERSION"])
+            request.add_header('Host', fetchhost)
             response = urllib2.urlopen(request)
             compressed = response.read(1)
 
@@ -962,7 +962,12 @@ def start():
     # Read Configuration
     try :
         import json
-        s = urllib2.urlopen(gConfig["ONLINE_CONFIG_URI"] + "?appid=" +gConfig["GOAGENT_FETCHHOST"])
+        param = ""
+        if len(gConfig["GOAGENT_FETCHHOST"]) > 0 and len(gConfig["GOAGENT_PASSWORD"]) == 0:
+            param = "?appid=" +gConfig["GOAGENT_FETCHHOST"]
+        url = (gConfig["ONLINE_CONFIG_URI"] + param)
+        logging.info("Load online config: " + url)
+        s = urllib2.urlopen(url)
         jsonConfig = json.loads( s.read() )
         for k in jsonConfig:
             logging.info( "read online json config " + k + " => " + str(jsonConfig[k]))
