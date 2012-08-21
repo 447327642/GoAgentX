@@ -192,7 +192,9 @@ domainWhiteList = [
     "no-ip.com",
     "nbcsandiego.com",
     "unity3d.com",
-    "opswat.com"
+    "opswat.com",
+    "126.net",
+    "163.com",
     ]
 
 def isIpBlocked(ip):
@@ -405,13 +407,7 @@ class CertUtil(object):
             CertUtil.writeFile(keyFile, key)
             CertUtil.writeFile(crtFile, crt)
             [os.remove(os.path.join('certs', x)) for x in os.listdir('certs')]
-        #Check CA imported
-        cmd = {
-                'win32'  : r'cd /d "%s" && certmgr.exe -add CA.crt -c -s -r localMachine Root >NUL' % os.path.dirname(__file__),
-                #'darwin' : r'sudo security add-trusted-cert -d �Cr trustRoot �Ck /Library/Keychains/System.keychain CA.crt',
-              }.get(sys.platform)
-        if cmd and os.system(cmd) != 0:
-            logging.warning('GoAgent install trusted root CA certificate failed, Please run goagent by administrator/root.')
+        
         if OpenSSL:
             keyFile = os.path.join(os.path.dirname(__file__), 'CA.key')
             crtFile = os.path.join(os.path.dirname(__file__), 'CA.crt')
@@ -579,6 +575,19 @@ class ProxyHandler(BaseHTTPRequestHandler):
                     hookInit()
                 self.wfile.write(status + "\r\n\r\n" + value)
                 return
+            if path == "/add":
+                postData = self.rfile.read(int(self.headers['Content-Length']))
+                data = urlparse.parse_qs(postData)
+                if "BLOCKED_DOMAINS" in data:
+                    domain = data["BLOCKED_DOMAINS"][0]
+                    if domain[:4] == "http":
+                        (scm, netloc, path, params, query, _) = urlparse.urlparse(domain)
+                        domain = netloc
+                    gConfig["BLOCKED_DOMAINS"][domain] = True
+                    
+                self.wfile.write("HTTP/1.1 302 FOUND\r\n" + "Location: /\r\n\r\n" + domain)
+                return
+
             for key in gConfig:
                 if type(gConfig[key]) in [str,int] :
                     html = html.replace("{"+key+"}", str(gConfig[key]))
@@ -603,15 +612,14 @@ class ProxyHandler(BaseHTTPRequestHandler):
             # Remove http://[host] , for google.com.hk
             path = self.path[self.path.find(netloc) + len(netloc):]
 
-            connectHost = host
             for d in domainWhiteList:
                 if host.endswith(d):
                     logging.info (host + " in domainWhiteList: " + d)
                     inWhileList = True
 
+            connectHost = self.getip(host)
             if not inWhileList:
                 doInject = self.enableInjection(host, connectHost)
-                connectHost = self.getip(host)
                 logging.info ("Resolved " + host + " => " + connectHost)
 
             if isDomainBlocked(host) or isIpBlocked(connectHost):
@@ -701,12 +709,13 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 if code in ["32", "10053"]: #errno.EPIPE, 10053 is for Windows
                     logging.info ("Detected remote disconnect: " + host)
                     return
+                if code in ["54"]:
+                    return self.do_METHOD_Tunnel()
                 if code in ["61"]: #server not support injection
                     if doInject:
-                        logging.info( "try not inject " + host)
+                        logging.info("try not inject " + host)
                         domainWhiteList.append(host)
-                        self.do_METHOD_Tunnel()
-                        return
+                        return self.do_METHOD_Tunnel()
  
             print "error in proxy: ", self.requestline
             print exc_type
@@ -715,8 +724,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 if not inWhileList:
                     logging.info ("add "+host+" to blocked domains")
                     gConfig["BLOCKED_DOMAINS"][host] = True
-
-            return self.do_METHOD_Tunnel()
+                    return self.do_METHOD_Tunnel()
     
     def do_GET(self):
         #some sites(e,g, weibo.com) are using comet (persistent HTTP connection) to implement server push
@@ -822,7 +830,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
             m = re.search('bytes=(\d+)-', autorange)
             start = int(m.group(1) if m else 0)
             headers['Range'] = 'bytes=%d-%d' % (start, start+1048576-1)
-
+        headers['X-Version'] = gConfig["VERSION"]
         skip_headers = frozenset(['Host', 'Vary', 'Via', 'X-Forwarded-For', 'Proxy-Authorization', 'Proxy-Connection', 'Upgrade', 'Keep-Alive'])
         strheaders = ''.join('%s: %s\r\n' % (k, v) for k, v in headers.iteritems() if k not in skip_headers)
 
@@ -975,15 +983,20 @@ def start():
     for x in range(16):
         dnsserver = gConfig['REMOTE_DNS']
         try:
-            print "DNS: " + dnsserver + " - %d"%x
+            logging.info("DNS: " + dnsserver + " - %d"%x)
             response = DNS.Request().req(name="www.twitter.com", qtype="A", protocol="udp", port=gConfig["DNS_PORT"], server=dnsserver, drop_blackholes=False)
-            ip = response.answers[0]["data"]
-            if ip not in cnt: cnt[ip] = 0
-            cnt[ip] += 1
-            if (ip not in gConfig["BLACKHOLES"]):
-                print "### new fake ip: " + ip 
-                gConfig["BLACKHOLES"].append(ip)
-                
+            for a in response.answers:
+                if a["typename"]=="CNAME":
+                    continue
+                ip = a["data"]
+                if ip not in cnt: cnt[ip] = 0
+                cnt[ip] += 1
+                if (ip not in gConfig["BLACKHOLES"]):
+                    if ip.split(".")[0] == "199": 
+                        continue
+                    print "### new fake ip: " + ip 
+                    gConfig["BLACKHOLES"].append(ip)
+                break
         except:
             print sys.exc_info()
     print "DNS hijack test:" + str(cnt)
@@ -1009,16 +1022,6 @@ def start():
     hookInit()
 
     try:
-        import json
-        global gipWhiteList;
-        s = open(gConfig["CHINA_IP_LIST_FILE"])
-        gipWhiteList = json.loads( s.read() )
-        logging.info( "load %d ip range rules" % len(gipWhiteList))
-        s.close()
-    except:
-        logging.info( "load ip-range config fail")
-
-    try:
         s = urllib2.urlopen(gConfig["BLOCKED_DOMAINS_URI"])
         for line in s.readlines():
             line = line.strip()
@@ -1031,11 +1034,13 @@ def start():
     CertUtil.checkCA()
     print "Loaded", len(gConfig["HOST"]), " dns rules."
     print "Set your browser's HTTP/HTTPS proxy to 127.0.0.1:%d"%(gOptions.port)
-    try: 
-        import webbrowser
-        webbrowser.open("http://127.0.0.1:%d"%gOptions.port)
-    except:
-        print "You can configure your proxy var http://127.0.0.1:%d"%(gOptions.port)
+    print "You can configure your proxy var http://127.0.0.1:%d"%(gOptions.port)
+    if gConfig['CONFIG_ON_STARTUP']:
+        try: 
+            import webbrowser
+            webbrowser.open("http://127.0.0.1:%d"%gOptions.port)
+        except:
+            pass
 
     server = ThreadingHTTPServer(("0.0.0.0", gOptions.port), ProxyHandler)
     try: server.serve_forever()

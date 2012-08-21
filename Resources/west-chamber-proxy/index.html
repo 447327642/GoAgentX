@@ -85,7 +85,7 @@ $().ready(
 function() {
 var domains = "";
 for(var key in gConfig.BLOCKED_DOMAINS) {
-    domains = domains + "\r\n" + key;
+    domains = domains + key + "\r\n";
 }
 $('#BLOCKED_DOMAINS_TEXT').text(domains)
 }
@@ -113,7 +113,12 @@ $('#BLOCKED_DOMAINS_TEXT').text(domains)
         <div>
             <h1>The blocked domains</h1>
             <p>These domains have to pass through proxy server.</p>
-            <div id="BLOCKED_DOMAINS"> <textarea id="BLOCKED_DOMAINS_TEXT"></textarea></div>
+            <div id="BLOCKED_DOMAINS_READ_ONLY"> <textarea id="BLOCKED_DOMAINS_TEXT"></textarea></div>
+            
+            <form id="BLOCKED_DOMAINS" action="/add" method="POST" >
+            Add a domain/url: <input type="text" name="BLOCKED_DOMAINS" value="http://baidu.jp/" /> 
+            <input type="submit" name="SUBMIT" />
+            </form>
         </div>
         
         <div>
