@@ -8,6 +8,9 @@
 
 #import "GAAppDelegate.h"
 
+#import "GAConfigFieldManager.h"
+#import "GAStunnelService.h"
+
 
 @implementation GAAppDelegate
 
@@ -16,40 +19,13 @@
 #pragma mark -
 #pragma mark Helper
 
-- (NSString *)pathInApplicationSupportFolder:(NSString *)path {
-    NSString *folder = [[[NSHomeDirectory() stringByAppendingPathComponent:@"Library"]
-                         stringByAppendingPathComponent:@"Application Support"]
-                        stringByAppendingPathComponent:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleIdentifier"]];
-    return [folder stringByAppendingPathComponent:path];
-}
-
-
-- (NSString *)copyFolderToApplicationSupport:(NSString *)folder {
-    NSString *srcPath = [[NSBundle mainBundle] resourcePath];
-    NSLog(@"\nsrcPath: %@", srcPath);
-    NSString *copyPath = [self pathInApplicationSupportFolder:folder];
-    NSLog(@"\ncopyPath: %@", copyPath);
-    [[NSFileManager defaultManager] removeItemAtPath:copyPath error:NULL];
-    [[NSFileManager defaultManager] createDirectoryAtPath:[copyPath stringByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:NULL];
-    [[NSFileManager defaultManager] copyItemAtPath:[srcPath stringByAppendingPathComponent:@"west-chamber-proxy"]
-                                            toPath:copyPath error:NULL];
-    return copyPath;
-}
-
-- (NSString *)copyLocalToApplicationSupport {
-    return [self copyFolderToApplicationSupport:@"local"];
-}
-
-
-- (NSDictionary *)defaultSettings {
-    NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"GoAgentDefaultSettings" ofType:@"plist"]];
-    return dict;
-}
-
-
-- (void)setStatusToRunning:(BOOL)running {
-    NSInteger port = [[NSUserDefaults standardUserDefaults] integerForKey:@"GoAgent:Local:Port"];
-    NSString *statusText = [NSString stringWithFormat:@"正在运行，端口 %ld", port];
+- (void)setStatusToRunning:(NSNumber *)status {
+    BOOL running = [status boolValue];
+    
+    NSString *statusText = @"正在运行";
+    if ([proxyService proxyPort] > 0) {
+        statusText = [statusText stringByAppendingFormat:@"，端口 %ld", [proxyService proxyPort]];
+    }
     NSImage *statusImage = [NSImage imageNamed:@"status_running"];
     NSString *buttonTitle = @"停止";
     
@@ -59,58 +35,21 @@
         buttonTitle = @"启动";
     }
     
-    statusBarItem.toolTip = statusText;
     statusTextLabel.stringValue = statusText;
     statusImageView.image = statusImage;
-    statusMenuItem.title = statusText;
+    statusMenuItem.title = [NSString stringWithFormat:@"%@ %@", [proxyService serviceTitle], statusText];
     statusMenuItem.image = statusImage;
+    statusBarItem.toolTip = statusMenuItem.title;
     statusToggleButton.title = buttonTitle;
 }
 
-- (NSArray *)connectionModes {
-    return [NSArray arrayWithObjects:@"HTTP", @"HTTPS", nil];
-}
-
-
-- (NSArray *)gaeProfiles {
-    return [NSArray arrayWithObjects:@"google_cn", @"google_hk", @"google_ipv6", nil];;
-}
-
-
-#pragma mark -
-#pragma mark Setup
 
 - (void)setupStatusItem {
     statusBarItem = [[NSStatusBar systemStatusBar] statusItemWithLength:23.0];
     statusBarItem.image = [NSImage imageNamed:@"status_item_icon"];
     statusBarItem.alternateImage = [NSImage imageNamed:@"status_item_icon_alt"];
     statusBarItem.menu = statusBarItemMenu;
-    statusBarItem.toolTip = @"GoAgent is NOT Running";
     [statusBarItem setHighlightMode:YES];
-}
-
-
-- (BOOL)checkIfGoAgentInstalled {
-    NSString *goagentPath = [self pathInApplicationSupportFolder:@"goagent"];
-    NSString *proxypyPath  = [[goagentPath stringByAppendingPathComponent:@"local"] stringByAppendingPathComponent:@"westchamberproxy.py"];
-    
-    return [[NSFileManager defaultManager] fileExistsAtPath:proxypyPath];
-}
-
-
-- (void)installFromFolder:(NSString *)path {
-    NSString *goagentPath = [self pathInApplicationSupportFolder:@"goagent"];
-    [[NSFileManager defaultManager] removeItemAtPath:goagentPath error:NULL];
-    [[NSFileManager defaultManager] createDirectoryAtPath:goagentPath withIntermediateDirectories:YES attributes:nil error:NULL];
-    
-    [[NSFileManager defaultManager] copyItemAtPath:path
-                                            toPath:[goagentPath stringByAppendingPathComponent:@"local"] error:NULL];
-    
-}
-
-
-- (void)showInstallPanel:(id)sender {
-    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/liruqi/GoAgentX/downloads"]];
 }
 
 
@@ -118,12 +57,8 @@
 #pragma mark 菜单事件
 
 - (void)showMainWindow:(id)sender {
-    [self.window setLevel:NSFloatingWindowLevel];
-    if ([self.window canBecomeMainWindow]) {
-        [self.window makeMainWindow];
-    }
+    [NSApp activateIgnoringOtherApps:YES];
     [self.window makeKeyAndOrderFront:nil];
-    [self.window makeKeyWindow];
 }
 
 
@@ -137,71 +72,53 @@
 }
 
 
+- (void)showAbout:(id)sender {
+    [NSApp activateIgnoringOtherApps:YES];
+    [NSApp orderFrontStandardAboutPanel:nil];
+}
+
+
 #pragma mark -
 #pragma mark 运行状态
 
-- (void)toggleServiceStatus:(id)sender {
-    if (proxyRunner == nil) {
-        proxyRunner = [GACommandRunner new];
+- (void)refreshSystemProxySettings:(id)sender {
+    [proxyService toggleSystemProxy:![[NSUserDefaults standardUserDefaults] boolForKey:@"GoAgent:DontAutoToggleSystemProxySettings"]];
+}
+
+
+- (void)loadProxyService {
+    NSInteger index = [servicesListPopButton.itemArray indexOfObject:[servicesListPopButton selectedItem]];
+    if (index == NSNotFound) {
+        return;
     }
     
-    GACommandRunner *runner = proxyRunner;
+    proxyService = [servicesList objectAtIndex:index];
+}
+
+
+- (void)selectedServiceChanged:(id)sender {
+    if ([sender isKindOfClass:[NSMenuItem class]]) {
+        [servicesListPopButton selectItemWithTitle:[sender title]];
+    }
     
-    if ([runner isTaskRunning]) {
-        [runner terminateTask];
-        [self setStatusToRunning:NO];
-        [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"GoAgent:LastRunPID"];
+    if ([proxyService isRunning]) {
+        [proxyService stop];
+        [self performSelector:@selector(toggleServiceStatus:) withObject:nil afterDelay:1.0];
+    } else {
+        [self loadProxyService];
+        [self setStatusToRunning:[NSNumber numberWithBool:NO]];
+    }
+}
+
+
+- (void)toggleServiceStatus:(id)sender {
+    if ([proxyService isRunning]) {
+        [proxyService stop];
         
     } else {
-        // 关闭可能的上次运行的 goagent
-        NSInteger lastRunPID = [[NSUserDefaults standardUserDefaults] integerForKey:@"GoAgent:LastRunPID"];
-        if (lastRunPID > 0) {
-            const char *killCmd = [[NSString stringWithFormat:@"kill %ld", lastRunPID] UTF8String];
-            system(killCmd);
-        }
-        
-        // 复制一份 local 到 Application Support
-        NSString *copyPath = [self copyLocalToApplicationSupport];
-        
-        // 生成 proxy.ini
-        NSDictionary *defaults = [self defaultSettings];
-        NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-        NSString *proxyini = [NSString stringWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"proxyinitemplate" ofType:nil] 
-                                                       encoding:NSUTF8StringEncoding error:NULL];
-        for (NSString *key in [defaults allKeys]) {
-            NSString *value = [userDefaults stringForKey:key] ?: @"";
-            if ([key isEqualToString:@"GoAgent:Local:GAEProfile"]) {
-                value = [[self gaeProfiles] objectAtIndex:[value intValue]];
-            } else if ([key isEqualToString:@"GoAgent:Local:ConnectMode"]) {
-                value = [[self connectionModes] objectAtIndex:[value intValue]];
-            }
-            proxyini = [proxyini stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"{%@}", key]
-                                                           withString:value];
-            NSLog(@"\nkey-value: %@ - %@", key, value);
-        }
-        NSLog(@"\ncurrent directory: %@", copyPath);
-        [proxyini writeToFile:[copyPath stringByAppendingPathComponent:@"config.py"] atomically:YES encoding:NSUTF8StringEncoding error:NULL];
-        
-        [statusLogTextView clear];
-        [statusLogTextView appendString:@"正在启动...\n"];
-        
-        // 启动代理
-        NSArray *arguments = [NSArray arrayWithObjects:@"python", @"westchamberproxy.py", nil];
-        [runner runCommand:@"/usr/bin/env"
-          currentDirectory:copyPath
-                 arguments:arguments
-                 inputText:nil
-            outputTextView:statusLogTextView 
-        terminationHandler:^(NSTask *theTask) {
-            [self setStatusToRunning:NO];
-            [statusLogTextView appendString:@"服务已停止\n"];
-        }];
-        
-        [statusLogTextView appendString:@"启动完成\n"];
-        
-        [[NSUserDefaults standardUserDefaults] setInteger:[runner processId] forKey:@"GoAgent:LastRunPID"];
-        
-        [self setStatusToRunning:YES];
+        [self loadProxyService];
+        NSLog(@"Starting %@ ...", [proxyService serviceTitle]);
+        [proxyService start];
     }
 }
 
@@ -212,12 +129,14 @@
 
 
 #pragma mark -
-#pragma mark 客户端设置
+#pragma mark TextView delegate
 
-- (void)applyClientSettings:(id)sender {
-    [proxyRunner terminateTask];
-    sleep(1);
-    [self toggleServiceStatus:nil];
+- (void)stunnelServerListDidChange:(NSNotification *)notification {
+    NSTextView *textView = stunnelServerListTextView;
+    NSString *text = textView.string;
+    
+    [GAStunnelService loadServices:[GAStunnelService parseServicesList:text]
+                      toPopupButton:stunnelSelectedServerPopupButton];
 }
 
 
@@ -233,23 +152,131 @@
 #pragma mark -
 #pragma mark App delegate
 
-- (void)applicationWillTerminate:(NSNotification *)notification {
-    [proxyRunner terminateTask];
+- (void)loadServicesList {
+    servicesList = [NSMutableArray new];
+    
+    NSArray *classList = [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"GoAgentXServices" ofType:@"plist"]];
+    
+    [servicesListPopButton removeAllItems];
+    for (NSString *clsName in classList) {
+        Class cls = NSClassFromString(clsName);
+        if (cls != nil) {
+            GAService *service = [cls sharedService];
+            [servicesList addObject:service];
+            
+            __block id _self = self;
+            service.outputTextView = statusLogTextView;
+            service.statusChangedHandler = ^(GAService *service) {
+                [_self setStatusToRunning:[NSNumber numberWithBool:[service isRunning]]];
+            };
+            
+            [servicesListPopButton addItemWithTitle:[service serviceTitle]];
+            [servicesListMenu addItemWithTitle:[service serviceTitle] action:@selector(selectedServiceChanged:) keyEquivalent:@""];
+        }
+    }
+    
+    [servicesListPopButton selectItemWithTitle:[[NSUserDefaults standardUserDefaults] stringForKey:@"GoAgentX:SelectedService"]];
+}
+
+
+- (void)setupStunnelPrefs {
+    // 监听 Stunnel 服务器列表改变事件
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(stunnelServerListDidChange:)
+                                                 name:NSTextDidChangeNotification 
+                                               object:stunnelServerListTextView];
+    [self stunnelServerListDidChange:nil];
+}
+
+
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender {
+    [proxyService stop];
+    
+    return NSTerminateNow;
 }
 
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+    // 初始化服务列表
+    [self loadServicesList];
+    
+    [[GAConfigFieldManager sharedManager] setupWithTabView:servicesConfigTabView];
+    
+    // 启动本机 PAC 服务
+    pacServer = [GAPACHTTPServer sharedServer];
+    [pacServer start:NULL];
+    
     // 设置状态日志最大为10K
     statusLogTextView.maxLength = 10000;
     
     // 注册默认偏好设置
-    [[NSUserDefaults standardUserDefaults] registerDefaults:[self defaultSettings]];
+    [[NSUserDefaults standardUserDefaults] registerDefaults:
+     [NSDictionary dictionaryWithContentsOfFile:
+      [[NSBundle mainBundle] pathForResource:@"GoAgentXDefaultsSettings" ofType:@"plist"]]];
+    
+    // 初始化 stunnel 设置
+    [self setupStunnelPrefs];
     
     // 设置 MenuBar 图标
     [self setupStatusItem];
-
-    [self showMainWindow:nil];
+    
+    // 尝试启动服务
     [self toggleServiceStatus:nil];
+    
+    // 如果没有配置，则显示主窗口
+    if (![proxyService hasConfigured]) {
+        [self showMainWindow:nil];
+    }
+}
+
+
+#pragma mark -
+#pragma mark Other delegate
+
+- (void)showStunnelConfigurationExample:(id)sender {
+    NSString *content = [[NSString alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"stunnel-config-example" ofType:@""]
+                                                        encoding:NSUTF8StringEncoding
+                                                           error:NULL];
+    NSAlert *alert = [NSAlert alertWithMessageText:@"Stunnel 服务器列表示例"
+                                     defaultButton:nil
+                                   alternateButton:nil
+                                       otherButton:nil
+                         informativeTextWithFormat:content ?: @""];
+    [alert runModal];
+}
+
+
+- (void)setAutoToggleProxySettingType:(id)sender {
+    NSMutableArray *types = [NSMutableArray new];
+    
+    if ([sender isKindOfClass:[NSButton class]]) {
+        for (NSButton *button in [(NSButton *)sender superview].subviews) {
+            if ([button isKindOfClass:[NSButton class]] && [button.identifier hasPrefix:@"AutoToggleProxySettingType"]) {
+                [types addObject:button];
+            }
+        }
+    } else if ([sender isKindOfClass:[NSMenuItem class]]) {
+        for (NSMenuItem *item in [(NSMenuItem *)sender menu].itemArray) {
+            if (item != sender) {
+                [types addObject:item];
+            }
+        }
+    }
+    
+    for (NSButton *button in types) {
+        [button setState:(button == sender ? NSOnState : NSOffState)];
+        NSString *key = [[[button infoForBinding:@"value"] objectForKey:NSObservedKeyPathKey] substringFromIndex:7];
+        [[NSUserDefaults standardUserDefaults] setInteger:[button state] forKey:key];
+    }
+    
+    if ([proxyService isRunning]) {
+        [self performSelector:@selector(refreshSystemProxySettings:) withObject:nil afterDelay:0.1];
+    }
+}
+
+
+- (void)importGoagentCA:(id)sender {
+    [[NSWorkspace sharedWorkspace] openFile:[[NSBundle mainBundle] pathForResource:@"CA" ofType:@"crt" inDirectory:@"goagent"]];
 }
 
 

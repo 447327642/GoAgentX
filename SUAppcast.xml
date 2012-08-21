@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"  xmlns:dc="http://purl.org/dc/elements/1.1/">
+   <channel>
+      <title>GoAgentX's Changelog</title>
+      <link>https://raw.github.com/ohdarling/GoAgentX/master/SUAppcast.xml</link>
+      <description></description>
+      <language>zh</language>
+         <item>
+            <title>GoAgentX v1.3.0</title>
+            <description><![CDATA[
+                <h2>GoAgentX v1.3.0 Changelog</h2>
+                <p>更新时请先停止 GoAgentX 服务。</p>
+                <ul>
+                    <li>[NEW] 支持自定义 PAC 域名列表</li>
+                    <li>[NEW] 支持部署 golang 版本 goagent 服务端</li>
+                    <li>[NEW] 添加导入 goagent 根证书功能</li>
+                    <li>[MOD] 更新 goagent 到 1.8.11</li>
+                    <li>[MOD] 更新 west-chamber 到 2012.07.09</li>
+                    <li>[MOD] 调整代理切换界面</li>
+                </ul>
+            ]]></description>
+            <pubDate>Mon, 10 Jul 2012 15:00:00 +0800</pubDate>
+            <enclosure url="https://github.com/downloads/ohdarling/GoAgentX/GoAgentX-v1.3.0.dmg" sparkle:shortVersionString="1.3.0" sparkle:version="13" length="2605106" type="application/octet-stream" sparkle:dsaSignature="MCwCFDXOn+CNsB+MXGnmoHG9T+9LPW8GAhQhfp3F7X9EaLUGg6wKXYE1X00+/w==" />
+         </item>
+         <item>
+            <title>GoAgentX v1.2.0</title>
+            <description><![CDATA[
+                <h2>GoAgentX v1.2.0 Changelog</h2>
+                <ul>
+                    <li>[NEW] 集成 SSH 服务</li>
+                    <li>[NEW] 集成 stunnel 服务</li>
+                    <li>[NEW] 添加菜单栏图标切换服务功能</li>
+                    <li>[NEW] 添加菜单栏图标切换使用 PAC 和不使用 PAC 功能</li>
+                    <li>[FIX] 修正自动切换 PAC 时在 Safari 下不工作的 bug</li>
+                    <li>[FIX] 修正不使用 PAC 时没有设置 HTTPS 代理的 bug</li>
+                    <li>[FIX] 修正停止服务时，没有恢复代理设置为原始设置的 bug</li>
+                    <li>[MOD] 更新 goagent 到 1.8.5 稳定版</li>
+                    <li>[MOD] 更新西厢第3季到 20120505</li>
+                </ul>
+            ]]></description>
+            <pubDate>Mon, 07 May 2012 20:00:00 +0800</pubDate>
+            <enclosure url="https://github.com/downloads/ohdarling/GoAgentX/GoAgentX-v1.2.0.dmg" sparkle:shortVersionString="1.2.0" sparkle:version="12" length="2446709" type="application/octet-stream" sparkle:dsaSignature="MCwCFCuHTVOlB5acVv14gsjtzTwb/JudAhQRKQCo8uLJTl2aD0q4dMrfOEn+sA==" />
+         </item>
+         <item>
+            <title>GoAgentX v1.1.0</title>
+            <description><![CDATA[
+                <h2>GoAgentX v1.1.0 Changelog</h2>
+                <ul>
+                    <li>[NEW] [NEW] 集成 goagent 1.8.4，不再需要单独下载</li>
+                    <li>[NEW] 集成 west-chamber-season-3 20120428</li>
+                    <li>[NEW] 集成 PAC 支持</li>
+                </ul>
+            ]]></description>
+            <pubDate>Sat, 28 Apr 2012 20:41:00 +0800</pubDate>
+            <enclosure url="https://github.com/downloads/ohdarling/GoAgentX/GoAgentX-v1.1.0.dmg" sparkle:shortVersionString="1.1.0" sparkle:version="8" length="2368297" type="application/octet-stream" sparkle:dsaSignature="MC0CFQCx1IlclmXX3Axubfr5Rq+mRml/dgIUQn+v+VJBj/g3KZvFqRedJEhQ1tQ=" />
+         </item>
+         <item>
+            <title>GoAgentX v1.0.5</title>
+            <description><![CDATA[
+                <h2>GoAgentX v1.0.5 Changelog</h2>
+                <ul>
+                    <li>[NEW] 兼容 goagent 1.8.3</li>
+                    <li>[NEW] 添加自动更新支持</li>
+                    <li>[NEW] 增加 PPPoE 拨号的 PAC 自动设置支持</li>
+                    <li>[NEW] 支持自定义 PAC 地址</li>
+                </ul>
+            ]]></description>
+            <pubDate>Fri, 20 Apr 2012 21:52:24 +0800</pubDate>
+            <enclosure url="https://github.com/downloads/ohdarling/GoAgentX/GoAgentX-v1.0.5.dmg" sparkle:shortVersionString="1.0.5" sparkle:version="7" length="363009" type="application/octet-stream" sparkle:dsaSignature="MCwCFCgRwkJMTlwYJlnb4vmVRBusdzxiAhQB3h5R3BHjAyZl02fxdU3rNyUc0w==" />
+         </item>
+   </channel>
+</rss>

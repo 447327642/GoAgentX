@@ -9,16 +9,23 @@
 #import <Cocoa/Cocoa.h>
 
 #import "GAAutoscrollTextView.h"
-#import "GACommandRunner.h"
+#import "GAService.h"
+#import "GAPACHTTPServer.h"
 
-@interface GAAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate> {
+@interface GAAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate, NSTextViewDelegate> {
     NSStatusItem        *statusBarItem;
     
-    GACommandRunner     *proxyRunner;
-    GACommandRunner     *deployRunner;
+    NSMutableArray      *servicesList;
+    GAService           *proxyService;
     
-    IBOutlet NSMenu     *statusBarItemMenu;
-    IBOutlet NSMenuItem *statusMenuItem;
+    GAPACHTTPServer     *pacServer;
+    
+    IBOutlet NSMenu                 *statusBarItemMenu;
+    IBOutlet NSMenuItem             *statusMenuItem;
+    
+    IBOutlet NSPopUpButton          *servicesListPopButton;
+    IBOutlet NSMenu                 *servicesListMenu;
+    IBOutlet NSTabView              *servicesConfigTabView;
     
     // 状态
     IBOutlet NSTextField            *statusTextLabel;
@@ -26,28 +33,24 @@
     IBOutlet NSButton               *statusToggleButton;
     IBOutlet GAAutoscrollTextView   *statusLogTextView;
     
-    // 客户端设置
-    IBOutlet NSTextField            *clientPortField;
-    IBOutlet NSTextField            *clientAppIdField;
-    IBOutlet NSTextField            *clientServicePasswordField;
-    IBOutlet NSSegmentedControl     *clientConnectModeSegment;
-    IBOutlet NSSegmentedControl     *clientServerSegment;
-    IBOutlet NSButton               *clientUseProxyButton;
-    IBOutlet NSTextField            *clientProxyServerField;
-    IBOutlet NSTextField            *clientProxyUsernameField;
-    IBOutlet NSTextField            *clientProxyPasswordField;
-    
+    IBOutlet NSPopUpButton          *stunnelSelectedServerPopupButton;
+    IBOutlet NSTextView             *stunnelServerListTextView;
 }
+
 
 - (IBAction)showMainWindow:(id)sender;
 - (IBAction)exitApplication:(id)sender;
 - (IBAction)showHelp:(id)sender;
+- (IBAction)showAbout:(id)sender;
 
+- (IBAction)selectedServiceChanged:(id)sender;
 - (IBAction)toggleServiceStatus:(id)sender;
 - (IBAction)clearStatusLog:(id)sender;
 
-- (IBAction)applyClientSettings:(id)sender;
-- (IBAction)showInstallPanel:(id)sender;
+- (IBAction)setAutoToggleProxySettingType:(id)sender;
+- (IBAction)showStunnelConfigurationExample:(id)sender;
+
+- (IBAction)importGoagentCA:(id)sender;
 
 
 @property (assign) IBOutlet NSWindow *window;

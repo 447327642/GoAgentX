@@ -30,6 +30,55 @@ $(function() {
       return {id : "GOAGENT_FETCHHOST"};
     }
   });
+
+  $(".SOCKS_HOST").editable("/save", {
+    indicator : '<img src="http://www.appelsiini.net/projects/jeditable/img/indicator.gif">',
+    submit : "OK",
+    style  : "inherit",
+    submitdata : function() {
+      return {id : "SOCKS_HOST"};
+    }
+  });
+
+  $(".SOCKS_PORT").editable("/save", {
+    indicator : '<img src="http://www.appelsiini.net/projects/jeditable/img/indicator.gif">',
+    submit : "OK",
+    style  : "inherit",
+    submitdata : function() {
+      return {id : "SOCKS_PORT"};
+    }
+  });
+
+  $(".REMOTE_DNS").editable("/save", {
+    indicator : '<img src="http://www.appelsiini.net/projects/jeditable/img/indicator.gif">',
+    submit : "OK",
+    style  : "inherit",
+    submitdata : function() {
+      return {id : "REMOTE_DNS"};
+    }
+  });
+
+  $(".SKIP_LOCAL_RESOLV").editable("/save", {
+    indicator : '<img src="http://www.appelsiini.net/projects/jeditable/img/indicator.gif">',
+    data    :"{true:'ON',false:'OFF'}",
+    type   : "select",
+    submit : "OK",
+    style  : "inherit",
+    submitdata : function() {
+      return {id : "SKIP_LOCAL_RESOLV"};
+    }
+  });
+
+  $(".ADSHOSTON").editable("/save", {
+    indicator : '<img src="http://www.appelsiini.net/projects/jeditable/img/indicator.gif">',
+    data    :"{true:'ON',false:'OFF'}",
+    type   : "select",
+    submit : "OK",
+    style  : "inherit",
+    submitdata : function() {
+      return {id : "ADSHOSTON"};
+    }
+  });
 });
 
 $().ready(
@@ -49,12 +98,18 @@ $('#BLOCKED_DOMAINS_TEXT').text(domains)
         <div><h1>Basic</h1>
             <ul>
                 <li>Proxy Type: <b class="PROXY_TYPE" style="display: inline">{PROXY_TYPE} </b></li>
-                <li>GoAgent Fetch Host: <b class="GOAGENT_FETCHHOST">{GOAGENT_FETCHHOST} </b></li>
-                <li>Socks Proxy Host: {SOCKS_HOST}</li>
-                <li>Socks Proxy Port: {SOCKS_PORT}</li>
+                <li>GoAgent Fetch Host: <b class="GOAGENT_FETCHHOST">{GOAGENT_FETCHHOST} </b> (<a href="http://wcproxy.sinaapp.com/goagent.php" target="_blank">LIST</a>)</li>
+                <li>Socks Proxy Host: <b class="SOCKS_HOST">{SOCKS_HOST}</b></li>
+                <li>Socks Proxy Port: <b class="SOCKS_PORT">{SOCKS_PORT}</b></li>
+                <li>Remote DNS: <b class="REMOTE_DNS">{REMOTE_DNS}</b></li>
+                <li>Remote DNS First: <b class="SKIP_LOCAL_RESOLV">{SKIP_LOCAL_RESOLV}</b></li>
             </ul>
         </div>
-        
+        <div><h1>ADs block</h1>
+            <ul>
+                <li>ADs Block: <b class="ADSHOSTON" style="display: inline">{ADSHOSTON} </b></li>
+            </ul>
+        </div>
         <div>
             <h1>The blocked domains</h1>
             <p>These domains have to pass through proxy server.</p>
